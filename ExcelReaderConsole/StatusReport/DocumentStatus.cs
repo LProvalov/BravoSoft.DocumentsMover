@@ -9,21 +9,23 @@ namespace ExcelReaderConsole.StatusReport
     public class DocumentStatus
     {
         private Document document;
+        private readonly StringBuilder stringBuilder;
         public DocumentStatus(Document document)
         {
             this.document = document;
+            stringBuilder = new StringBuilder();
         }
 
         public bool TextFileExist { get; set; } = false;
         public bool ScanFileExist { get; set; } = false;
-        public string StatusMessage { get; set; } = string.Empty;
+        public bool TextFileWasMoved { get; set; } = false;
+        public bool ScanFileWasMoved { get; set; } = false;
 
-        public void ConsolePrint()
+        public string StatusMessage => stringBuilder.ToString();
+
+        public void StatusMessageAppendLine(string line)
         {
-            if (!ScanFileExist || !TextFileExist)
-            {
-                Console.WriteLine(StatusMessage);
-            }
+            stringBuilder.AppendLine(line);
         }
     }
 }

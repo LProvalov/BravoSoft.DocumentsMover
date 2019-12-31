@@ -42,8 +42,33 @@ namespace ExcelReaderConsole
                 Console.WriteLine($"\n{document.Identifier}");
 
                 DocumentStatus documentStatus = CheckingSystem.CheckDocument(document);
-                documentStatus.ConsolePrint();
-                fileManager.TryToCopyFiles(document);
+                string errorMessage;
+                if (documentStatus.TextFileExist)
+                {
+                    if (!fileManager.TryToCopyTextFile(document, out errorMessage))
+                    {
+                        documentStatus.TextFileWasMoved = false;
+                        documentStatus.StatusMessageAppendLine(errorMessage);
+                    }
+                    else
+                    {
+                        documentStatus.TextFileWasMoved = true;
+                    }
+                }
+
+                if (documentStatus.ScanFileExist)
+                {
+                    if (!fileManager.TryToCopyScanFile(document, out errorMessage))
+                    {
+                        documentStatus.StatusMessageAppendLine(errorMessage);
+                        documentStatus.ScanFileWasMoved = false;
+                    }
+                    else
+                    {
+                        documentStatus.ScanFileWasMoved = true;
+                    }
+                }
+
                 cardBuilder.BuildCard(document.Identifier, document);
                 if (documentStatus.ScanFileExist)
                 {

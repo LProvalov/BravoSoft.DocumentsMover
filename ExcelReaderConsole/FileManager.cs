@@ -25,7 +25,7 @@ namespace ExcelReaderConsole
                 return instance;
             }
         }
-
+        private readonly AppSettings appSettings = AppSettings.Instance;
         private DirectoryInfo CreateDir(string dirName)
         {
             string dirPath = Path.Combine(AppSettings.Instance.GetOutputDirectoryPath(), dirName);
@@ -79,10 +79,9 @@ namespace ExcelReaderConsole
             return new FileInfo(textFilePath);
         }
 
-        public void TryToCopyFiles(Document document)
+        public bool TryToCopyTextFile(Document document, out string errorMessage)
         {
-            // TODO: add errors handler
-            AppSettings appSettings = AppSettings.Instance;
+            errorMessage = string.Empty;
             DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
             if (!string.IsNullOrEmpty(document.TextFileName))
             {
@@ -96,10 +95,24 @@ namespace ExcelReaderConsole
                     if (newFileInfo.Exists)
                     {
                         document.CopiedTextFileName = newFileInfo.Name;
-                    }                    
+                        return true;
+                    }
+                }
+                else
+                {
+                    errorMessage = $"Text file can't be copied. {textFileFullPath} doesn't exist.";
                 }
             }
+            else
+            {
+                errorMessage = "Text file of document null or empty. It can't be copied.";
+            }
+            return false;
+        }
 
+        public bool TryToCopyScanFile(Document document, out string errorMessage)
+        {
+            errorMessage = string.Empty;
             DirectoryInfo documentAdditionalDirectory = CreateDirectoriesForAdditionalFiles(document);
             if (!string.IsNullOrEmpty(document.ScanFileName))
             {
@@ -113,9 +126,20 @@ namespace ExcelReaderConsole
                     if (newFileInfo.Exists)
                     {
                         document.CopiedScanFileName = newFileInfo.Name;
+                        return true;
                     }
                 }
+                else
+                {
+                    errorMessage = $"Scan file can't be copied. {scanFileFullPath} doesn't exist.";
+                }
             }
+            else
+            {
+                errorMessage = $"Scan file of document null or empty. It can't be copied.";
+            }
+
+            return false;
         }
     }
 }
