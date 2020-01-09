@@ -58,8 +58,6 @@ namespace ExcelReaderConsole.StatusReport
                 ds.ScanFileExist = CheckFile(scanFilePath, out var scanStatusMessage);
                 if (!string.IsNullOrEmpty(scanStatusMessage)) sb.AppendLine(scanStatusMessage);
             }
-
-            ds.StatusMessage = sb.ToString();
             return ds;
         }
     }
