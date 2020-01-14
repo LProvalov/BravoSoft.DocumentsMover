@@ -40,9 +40,11 @@ namespace ExcelReaderConsole
             foreach (var document in ds.GetDocuments())
             {
                 Console.WriteLine($"\n{document.Identifier}");
-
+                // Checking of files linked with document
                 DocumentStatus documentStatus = CheckingSystem.CheckDocument(document);
                 string errorMessage;
+
+                // Moving text files to output directory
                 if (documentStatus.TextFileExist)
                 {
                     if (!fileManager.TryToCopyTextFile(document, out errorMessage))
@@ -56,6 +58,7 @@ namespace ExcelReaderConsole
                     }
                 }
 
+                // Moving scan files to output directory
                 if (documentStatus.ScanFileExist)
                 {
                     if (!fileManager.TryToCopyScanFile(document, out errorMessage))

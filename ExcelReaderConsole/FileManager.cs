@@ -89,7 +89,9 @@ namespace ExcelReaderConsole
                 FileInfo textFileInfo = new FileInfo(textFileFullPath);
                 if (textFileInfo.Exists)
                 {
-                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), GetTextDirName(document), document.Identifier + textFileInfo.Extension);
+                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), 
+                        GetTextDirName(document), 
+                        $"{document.Identifier}_7845{textFileInfo.Extension}");
                     File.Copy(textFileInfo.FullName, newFilePath);
                     FileInfo newFileInfo = new FileInfo(newFilePath);
                     if (newFileInfo.Exists)
