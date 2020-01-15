@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Text;
 using ExcelDataReader;
@@ -52,6 +53,21 @@ namespace ExcelReaderConsole
             }
         }
 
+        private string ReadTextFieldFromExcelReader(IExcelDataReader reader,
+            DocumentsStorage documentStorage, string documentId, int colPosition, DocumentsStorage.FilesType filesType)
+        {
+            ReadColumn(reader, colPosition, out object textFromReader, out Type textFromReaderType);
+            if (textFromReaderType == typeof(string) && !string.IsNullOrEmpty(textFromReader as string))
+            {
+                if (filesType == DocumentsStorage.FilesType.Text) documentStorage.SetTextFileName(documentId, textFromReader as string);
+                else if (filesType == DocumentsStorage.FilesType.ScanCopy) documentStorage.SetScanFileName(documentId, textFromReader as string);
+                else if (filesType == DocumentsStorage.FilesType.TextPdf) documentStorage.SetTextPdfFileName(documentId, textFromReader as string);
+                else if (filesType == DocumentsStorage.FilesType.Attachments) documentStorage.SetAttachmentsFilesName(documentId, textFromReader as string);
+                return documentId;
+            }
+            return string.Empty;
+        }
+
         public void ReadData(DocumentsStorage documentStorage)
         {
             using (var stream = excelFileInfo.OpenRead())
@@ -68,7 +84,7 @@ namespace ExcelReaderConsole
                         int workingRow = 0;
 
                         // + Work with header + 
-                        int attributePositionStart = 2;
+                        int attributePositionStart = 5;
                         int fieldCount = reader.FieldCount - attributePositionStart;                        
                         documentStorage.Init(fieldCount);
 
@@ -90,32 +106,15 @@ namespace ExcelReaderConsole
                         while (reader.Read())
                         {
                             workingRow++;
-                            string documentId = null; 
+                            string documentId = documentStorage.AddDocument();
+                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 1, DocumentsStorage.FilesType.Text);
 
-                            object textFileName;
-                            Type textFileNameType;
-                            ReadColumn(reader, 1, out textFileName, out textFileNameType);
-                            if (textFileNameType == typeof(string) && !string.IsNullOrEmpty(textFileName as string))
-                            {
-                                if (string.IsNullOrEmpty(documentId))
-                                {
-                                    documentId = documentStorage.AddDocument(string.Format("{0:D5}", documentCount++));
-                                }
-                                documentStorage.SetTextFileName(documentId, textFileName as string);
-                            }
-
-                            object scanFileName;
-                            Type scanFileNameType;
-                            ReadColumn(reader, 2, out scanFileName, out scanFileNameType);
-                            if (scanFileNameType == typeof(string) && !string.IsNullOrEmpty(scanFileName as string))
-                            {
-                                if (string.IsNullOrEmpty(documentId))
-                                {
-                                    documentId = documentStorage.AddDocument(string.Format("{0:D5}", documentCount++));
-                                }
-                                documentStorage.SetScanFileName(documentId, scanFileName as string);
-                            }
-
+                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 2, DocumentsStorage.FilesType.ScanCopy);
+                            
+                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 3, DocumentsStorage.FilesType.TextPdf);
+                            
+                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 4, DocumentsStorage.FilesType.Attachments);
+                            
                             for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
                             {
                                 object value;

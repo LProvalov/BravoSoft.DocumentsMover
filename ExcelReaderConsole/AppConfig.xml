@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <AppSettingsModel xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <CardFileExtension>.a2</CardFileExtension>
-    <ExcelTemplateFilePath>D:\Projects\ExcelReaderConsole\template_bug_01.xlsx</ExcelTemplateFilePath>
-    <InputDirectoryPath>d:\Projects\ExcelReaderConsole\Input</InputDirectoryPath>
-    <OutputDirectoryPath></OutputDirectoryPath>
+    <ExcelTemplateFilePath>D:\Projects\DocumentsMover\template.xlsx</ExcelTemplateFilePath>
+    <InputDirectoryPath>d:\temp\DocumentMoverInput</InputDirectoryPath>
+    <OutputDirectoryPath>d:\temp\DocumentMoverOutput</OutputDirectoryPath>
     <Encoding>Unicode</Encoding>
 </AppSettingsModel>

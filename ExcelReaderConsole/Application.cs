@@ -41,42 +41,19 @@ namespace ExcelReaderConsole
             {
                 Console.WriteLine($"\n{document.Identifier}");
                 // Checking of files linked with document
-                DocumentStatus documentStatus = CheckingSystem.CheckDocument(document);
                 string errorMessage;
-
-                // Moving text files to output directory
-                if (documentStatus.TextFileExist)
-                {
-                    if (!fileManager.TryToCopyTextFile(document, out errorMessage))
-                    {
-                        documentStatus.TextFileWasMoved = false;
-                        documentStatus.StatusMessageAppendLine(errorMessage);
-                    }
-                    else
-                    {
-                        documentStatus.TextFileWasMoved = true;
-                    }
-                }
-
-                // Moving scan files to output directory
-                if (documentStatus.ScanFileExist)
-                {
-                    if (!fileManager.TryToCopyScanFile(document, out errorMessage))
-                    {
-                        documentStatus.StatusMessageAppendLine(errorMessage);
-                        documentStatus.ScanFileWasMoved = false;
-                    }
-                    else
-                    {
-                        documentStatus.ScanFileWasMoved = true;
-                    }
-                }
+                
+                fileManager.TryToCopyTextFile(document, out errorMessage);
+                if (!string.IsNullOrEmpty(errorMessage)) Console.WriteLine(errorMessage);
+                
+                fileManager.TryToCopyScanFile(document, out errorMessage);
+                if (!string.IsNullOrEmpty(errorMessage)) Console.WriteLine(errorMessage);
 
                 cardBuilder.BuildCard(document.Identifier, document);
-                if (documentStatus.ScanFileExist)
-                {
-                    cardBuilder.BuildAdditionalCard(document.Identifier, document);
-                }
+                //if (documentStatus.ScanFileExist)
+                //{
+                //    cardBuilder.BuildAdditionalCard(document.Identifier, document);
+                //}
             }
         }
     }

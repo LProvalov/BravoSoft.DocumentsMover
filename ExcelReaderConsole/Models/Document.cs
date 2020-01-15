@@ -16,6 +16,8 @@ namespace ExcelReaderConsole.Models
             values = new Dictionary<string, DocumentAttributeValue>(attributes.Count());
             TextFileName = string.Empty;
             ScanFileName = string.Empty;
+            AttachmentsFilesNames = string.Empty;
+            TextPdfFilesNames = string.Empty;
             CopiedTextFileName = string.Empty;
             CopiedScanFileName = string.Empty;
         }
@@ -26,6 +28,8 @@ namespace ExcelReaderConsole.Models
             values = new Dictionary<string, DocumentAttributeValue>(attributes.Count());
             TextFileName = string.Empty;
             ScanFileName = string.Empty;
+            AttachmentsFilesNames = string.Empty;
+            TextPdfFilesNames = string.Empty;
             CopiedTextFileName = string.Empty;
             CopiedScanFileName = string.Empty;
         }
@@ -93,6 +97,10 @@ namespace ExcelReaderConsole.Models
         public string ScanFileName { get; set; }
 
         public string CopiedScanFileName { get; set; }
+
+        public string AttachmentsFilesNames { get; set; }
+
+        public string TextPdfFilesNames { get; set; }
 
     }
 }

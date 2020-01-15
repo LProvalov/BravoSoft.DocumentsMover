@@ -7,6 +7,14 @@ namespace ExcelReaderConsole.Models
 {
     public class DocumentsStorage
     {
+        public enum FilesType
+        {
+            Text = 0,
+            ScanCopy,
+            TextPdf,
+            Attachments
+        }
+
         private int attributeCount = 0;
         private List<DocumentAttribute> attributes;
         private Dictionary<string, Document> documentsDictionary;
@@ -57,7 +65,10 @@ namespace ExcelReaderConsole.Models
 
         public string AddDocument(string identifier = null)
         {
-            Document newDocument = string.IsNullOrEmpty(identifier) ? new Document(attributes) : new Document(identifier, attributes);
+            string documentIdentifier = string.IsNullOrEmpty(identifier)
+                ? string.Format("{0:D5}", documentsDictionary.Count + 1)
+                : identifier;
+            Document newDocument = new Document(documentIdentifier, attributes);
             documentsDictionary.Add(newDocument.Identifier, newDocument);
             return newDocument.Identifier;
         }
@@ -72,6 +83,18 @@ namespace ExcelReaderConsole.Models
         {
             if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
             documentsDictionary[documentId].ScanFileName = scanFileName;
+        }
+
+        public void SetTextPdfFileName(string documentId, string textPdfFilesNames)
+        {
+            if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
+            documentsDictionary[documentId].TextPdfFilesNames = textPdfFilesNames;
+        }
+
+        public void SetAttachmentsFilesName(string documentId, string attachmentsFilesNames)
+        {
+            if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
+            documentsDictionary[documentId].AttachmentsFilesNames = attachmentsFilesNames;
         }
 
         public IEnumerable<Document> GetDocuments()
