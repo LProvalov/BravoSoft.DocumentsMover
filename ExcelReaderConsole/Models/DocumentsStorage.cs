@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ExcelReaderConsole.Models
 {
@@ -88,7 +86,7 @@ namespace ExcelReaderConsole.Models
         public void SetTextPdfFileName(string documentId, string textPdfFilesNames)
         {
             if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
-            documentsDictionary[documentId].TextPdfFilesNames = textPdfFilesNames;
+            documentsDictionary[documentId].TextPdfFileName = textPdfFilesNames;
         }
 
         public void SetAttachmentsFilesName(string documentId, string attachmentsFilesNames)
@@ -103,6 +101,15 @@ namespace ExcelReaderConsole.Models
             {
                 yield return value;
             }
+        }
+
+        public Document GetDocument(string identifyer)
+        {
+            if (documentsDictionary.ContainsKey(identifyer))
+            {
+                return documentsDictionary[identifyer];
+            }
+            return null;
         }
 
     }

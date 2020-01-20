@@ -1,10 +1,6 @@
 ﻿using ExcelReaderConsole.Models;
-using ExcelReaderConsole.StatusReport;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace ExcelReaderConsole
 {
@@ -49,11 +45,25 @@ namespace ExcelReaderConsole
                 fileManager.TryToCopyScanFile(document, out errorMessage);
                 if (!string.IsNullOrEmpty(errorMessage)) Console.WriteLine(errorMessage);
 
+                fileManager.TryToCopyTextPdfFile(document, out errorMessage);
+                if (!string.IsNullOrEmpty(errorMessage)) Console.WriteLine(errorMessage);
+
+                fileManager.TryToCopyAttachmentFiles(document, out errorMessage);
+                if (!string.IsNullOrEmpty(errorMessage)) Console.WriteLine(errorMessage);
+
                 cardBuilder.BuildCard(document.Identifier, document);
-                //if (documentStatus.ScanFileExist)
-                //{
-                //    cardBuilder.BuildAdditionalCard(document.Identifier, document);
-                //}
+                if (document.CopiedScanFileInfo != null && document.CopiedScanFileInfo.Exists)
+                {
+                    cardBuilder.BuildAdditionalCard(document.Identifier, document);
+                }
+
+                if (document.CopiedAttachmentsFilesInfos != null && document.CopiedAttachmentsFilesInfos.Length > 0)
+                {
+                    for (int attachmentCount = 1; attachmentCount <= document.CopiedAttachmentsFilesInfos.Length; attachmentCount++)
+                    {
+                        cardBuilder.BuildAdditionalCardForAttachment( $"Вложение{attachmentCount}", attachmentCount - 1, document);
+                    }
+                }
             }
         }
     }

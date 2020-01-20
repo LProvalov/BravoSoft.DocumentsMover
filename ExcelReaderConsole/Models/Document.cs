@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace ExcelReaderConsole.Models
 {
@@ -14,24 +14,12 @@ namespace ExcelReaderConsole.Models
         {
             identifier = Utility.GenerateStringIdentifier(Utility.GetSessionSeed());
             values = new Dictionary<string, DocumentAttributeValue>(attributes.Count());
-            TextFileName = string.Empty;
-            ScanFileName = string.Empty;
-            AttachmentsFilesNames = string.Empty;
-            TextPdfFilesNames = string.Empty;
-            CopiedTextFileName = string.Empty;
-            CopiedScanFileName = string.Empty;
         }
 
         public Document(string identifier, IEnumerable<DocumentAttribute> attributes)
         {
             this.identifier = identifier;
             values = new Dictionary<string, DocumentAttributeValue>(attributes.Count());
-            TextFileName = string.Empty;
-            ScanFileName = string.Empty;
-            AttachmentsFilesNames = string.Empty;
-            TextPdfFilesNames = string.Empty;
-            CopiedTextFileName = string.Empty;
-            CopiedScanFileName = string.Empty;
         }
 
         public string Identifier
@@ -90,17 +78,20 @@ namespace ExcelReaderConsole.Models
             }
         }
 
-        public string TextFileName { get; set; }
+        public string TextFileName { get; set; } = string.Empty;
+        public FileInfo TextFileInfo { get; set; } = null;
+        public FileInfo CopiedTextFileInfo { get; set; } = null;
 
-        public string CopiedTextFileName { get; set; }
+        public string ScanFileName { get; set; } = string.Empty;
+        public FileInfo ScanFileInfo { get; set; } = null;
+        public FileInfo CopiedScanFileInfo { get; set; } = null;
 
-        public string ScanFileName { get; set; }
+        public string AttachmentsFilesNames { get; set; } = string.Empty;
+        public FileInfo[] AttachmentsFilesInfos { get; set; } = null;
+        public FileInfo[] CopiedAttachmentsFilesInfos { get; set; } = null;
 
-        public string CopiedScanFileName { get; set; }
-
-        public string AttachmentsFilesNames { get; set; }
-
-        public string TextPdfFilesNames { get; set; }
-
+        public string TextPdfFileName { get; set; } = string.Empty;
+        public FileInfo TextPdfFileInfo { get; set; } = null;
+        public FileInfo CopiedTextPdfFileInfo { get; set; } = null;
     }
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.IO;
 using ExcelReaderConsole.Models;
 using System.Text;
 
@@ -56,6 +53,7 @@ namespace ExcelReaderConsole
                     {
                         sw.WriteLine($"{attribute.Key} {attribute.Value.Value}");
                     }
+
                     sw.Close();
                 }
             }
@@ -63,25 +61,31 @@ namespace ExcelReaderConsole
 
         public void BuildAdditionalCard(string cardName, Document document)
         {
-            string path = Path.Combine(outputDirectoryPath, FileManager.Instance.GetAttachDirName(document), $"{cardName}{extension}");
+            string path = Path.Combine(outputDirectoryPath, FileManager.Instance.GetAttachDirName(document),
+                $"{cardName}{extension}");
             FileInfo cardFileInfo = new FileInfo(path);
             if (!cardFileInfo.Exists)
             {
                 using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
                 {
-                    KeyValuePair<string, DocumentAttributeValue> attr7860;
-                    try
-                    {
-                        attr7860 = document.GetNotNullAttributes().First(attribute => attribute.Key.Equals("7860:"));
-                    }
-                    catch (ArgumentNullException nullEx)
-                    {
-                        // TODO: notify UI about error in template
-                        return;
-                    }
+                    sw.WriteLine($"1: {document.ScanFileName}");
+                    sw.WriteLine($"13: {document.CopiedScanFileInfo.Name}");
+                    sw.Close();
+                }
+            }
+        }
 
-                    sw.WriteLine($"1: {attr7860.Value.Value}");
-                    sw.WriteLine($"13: {document.CopiedScanFileName}");
+        public void BuildAdditionalCardForAttachment(string cardName, int attachmentCount, Document document)
+        {
+            string path = Path.Combine(outputDirectoryPath, FileManager.Instance.GetAttachDirName(document),
+                $"{cardName}{extension}");
+            FileInfo cardFileInfo = new FileInfo(path);
+            if (!cardFileInfo.Exists)
+            {
+                using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
+                {
+                    sw.WriteLine($"1: {document.AttachmentsFilesInfos[attachmentCount].Name}");
+                    sw.WriteLine($"13: {document.CopiedAttachmentsFilesInfos[attachmentCount].Name}");
                     sw.Close();
                 }
             }

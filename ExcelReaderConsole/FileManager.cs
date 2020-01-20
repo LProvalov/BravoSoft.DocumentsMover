@@ -86,17 +86,17 @@ namespace ExcelReaderConsole
             if (!string.IsNullOrEmpty(document.TextFileName))
             {
                 string textFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), document.TextFileName);
-                FileInfo textFileInfo = new FileInfo(textFileFullPath);
-                if (textFileInfo.Exists)
+                document.TextFileInfo = new FileInfo(textFileFullPath);
+                if (document.TextFileInfo.Exists)
                 {
                     string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), 
                         GetTextDirName(document), 
-                        $"{document.Identifier}_7845{textFileInfo.Extension}");
-                    File.Copy(textFileInfo.FullName, newFilePath);
+                        $"{document.Identifier}_7845{document.TextFileInfo.Extension}");
+                    File.Copy(document.TextFileInfo.FullName, newFilePath);
                     FileInfo newFileInfo = new FileInfo(newFilePath);
                     if (newFileInfo.Exists)
                     {
-                        document.CopiedTextFileName = newFileInfo.Name;
+                        document.CopiedTextFileInfo = newFileInfo;
                         return true;
                     }
                 }
@@ -119,15 +119,15 @@ namespace ExcelReaderConsole
             if (!string.IsNullOrEmpty(document.ScanFileName))
             {
                 string scanFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), document.ScanFileName);
-                FileInfo scanFileInfo = new FileInfo(scanFileFullPath);
-                if (scanFileInfo.Exists)
+                document.ScanFileInfo = new FileInfo(scanFileFullPath);
+                if (document.ScanFileInfo.Exists)
                 {
-                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), GetAttachDirName(document), scanFileInfo.Name);
-                    File.Copy(scanFileInfo.FullName, newFilePath);
+                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), GetAttachDirName(document), document.ScanFileInfo.Name);
+                    File.Copy(document.ScanFileInfo.FullName, newFilePath);
                     FileInfo newFileInfo = new FileInfo(newFilePath);
                     if (newFileInfo.Exists)
                     {
-                        document.CopiedScanFileName = newFileInfo.Name;
+                        document.CopiedScanFileInfo = newFileInfo;
                         return true;
                     }
                 }
@@ -141,6 +141,83 @@ namespace ExcelReaderConsole
                 errorMessage = $"Scan file of document null or empty. It can't be copied.";
             }
 
+            return false;
+        }
+
+        public bool TryToCopyTextPdfFile(Document document, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
+            if (!string.IsNullOrEmpty(document.TextPdfFileName))
+            {
+                string textPdfFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), document.TextPdfFileName);
+                document.TextPdfFileInfo = new FileInfo(textPdfFileFullPath);
+                if (document.TextPdfFileInfo.Exists)
+                {
+                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(),
+                        GetTextDirName(document),
+                        $"{document.Identifier}{document.TextPdfFileInfo.Extension}");
+                    File.Copy(document.TextPdfFileInfo.FullName, newFilePath);
+                    FileInfo newPdfFileInfo = new FileInfo(newFilePath);
+                    if (newPdfFileInfo.Exists)
+                    {
+                        document.CopiedTextPdfFileInfo = newPdfFileInfo;
+                        return true;
+                    }
+                }
+                else
+                {
+                    errorMessage = $"Text pdf file can't be copied. {textPdfFileFullPath} doesn't exist.";
+                }
+            }
+            else
+            {
+                errorMessage = "Text pdf file is null or empty. It can't be copied.";
+            }
+            return false;
+        }
+
+        public bool TryToCopyAttachmentFiles(Document document, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            if (!string.IsNullOrEmpty(document.AttachmentsFilesNames))
+            {
+                DirectoryInfo documentAdditionalDirectoryInfo = CreateDirectoriesForAdditionalFiles(document);
+                string[] attachmentsFilesNames = document.AttachmentsFilesNames.Split(';');
+                List<FileInfo> attachmentFilesInfos = new List<FileInfo>(attachmentsFilesNames.Length);
+                List<FileInfo> copiedAttachments = new List<FileInfo>(attachmentsFilesNames.Length);
+                int attachmentCount = 0;
+                foreach (var fileName in attachmentsFilesNames)
+                { 
+                    string attachmentFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), fileName.Trim());
+                    FileInfo attachmentFileInfo = new FileInfo(attachmentFileFullPath);
+                    if (attachmentFileInfo.Exists)
+                    {
+                        attachmentCount++;
+                        attachmentFilesInfos.Add(attachmentFileInfo);
+                        string newAttachmentFileName = Path.Combine(appSettings.GetOutputDirectoryPath(),
+                            GetAttachDirName(document),
+                            $"Вложение{attachmentCount}{attachmentFileInfo.Extension}");
+                        File.Copy(attachmentFileInfo.FullName, newAttachmentFileName);
+                        FileInfo newAttachmentFileInfo = new FileInfo(newAttachmentFileName);
+                        if (newAttachmentFileInfo.Exists)
+                        {
+                            copiedAttachments.Add(newAttachmentFileInfo);
+                        }
+                    }
+                    else
+                    {
+                        errorMessage = $"Attachment file {attachmentFileFullPath} doesn't exsist. It can't be copied.";
+                    }
+                }
+                document.AttachmentsFilesInfos = attachmentFilesInfos.ToArray();
+                document.CopiedAttachmentsFilesInfos = copiedAttachments.ToArray();
+            }
+            else
+            {
+                errorMessage = "Attachments files is null or empty. They can't be copied.";
+            }
             return false;
         }
     }

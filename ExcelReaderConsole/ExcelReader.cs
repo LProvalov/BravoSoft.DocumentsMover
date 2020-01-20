@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Text;
 using ExcelDataReader;
@@ -60,7 +59,11 @@ namespace ExcelReaderConsole
             if (textFromReaderType == typeof(string) && !string.IsNullOrEmpty(textFromReader as string))
             {
                 if (filesType == DocumentsStorage.FilesType.Text) documentStorage.SetTextFileName(documentId, textFromReader as string);
-                else if (filesType == DocumentsStorage.FilesType.ScanCopy) documentStorage.SetScanFileName(documentId, textFromReader as string);
+                else if (filesType == DocumentsStorage.FilesType.ScanCopy)
+                {
+                    documentStorage.SetScanFileName(documentId, textFromReader as string);
+                    documentStorage.SetAttributeValue(documentId, "7860:", new DocumentAttributeValue(textFromReader as string, typeof(string)));
+                }
                 else if (filesType == DocumentsStorage.FilesType.TextPdf) documentStorage.SetTextPdfFileName(documentId, textFromReader as string);
                 else if (filesType == DocumentsStorage.FilesType.Attachments) documentStorage.SetAttachmentsFilesName(documentId, textFromReader as string);
                 return documentId;
