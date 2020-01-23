@@ -15,17 +15,21 @@ namespace ExcelReaderConsole.Models
 
         private int attributeCount = 0;
         private List<DocumentAttribute> attributes;
+        private Dictionary<string, int> mapAttributIdToNumberIndexList;
+        private List<string> usedAttributeIds;
         private Dictionary<string, Document> documentsDictionary;
 
         public DocumentsStorage()
         {
             documentsDictionary = new Dictionary<string, Document>();
+            usedAttributeIds = new List<string>();
         }
 
         public void Init(int attributeCount)
         {
             this.attributeCount = attributeCount;
             attributes = new List<DocumentAttribute>(attributeCount);
+            mapAttributIdToNumberIndexList = new Dictionary<string, int>(attributeCount);
             for (int i = 0; i < attributeCount; i++)
             {
                 attributes.Add(new DocumentAttribute());
@@ -43,6 +47,7 @@ namespace ExcelReaderConsole.Models
             if (number > attributeCount) throw new IndexOutOfRangeException($"number is {number}, but it should be less than {attributeCount}");
             if (string.IsNullOrEmpty(identifier)) throw new Exception("idntifier couldn't be null or empty");
             attributes[number].Identifier = identifier;
+            mapAttributIdToNumberIndexList.Add(identifier, number);
         }
 
         public string GetAttributeIdentifier(int number)
@@ -53,12 +58,15 @@ namespace ExcelReaderConsole.Models
 
         public void SetAttributeValue(string documentId, string attributeId, DocumentAttributeValue value)
         {
-
             if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
             if (string.IsNullOrEmpty(attributeId)) throw new Exception("attributeId can't be null or empty");
             if (value == null) throw new Exception("document attribute value can't be null");
 
-            documentsDictionary[documentId].SetValue(attributeId, value);            
+            documentsDictionary[documentId].SetValue(attributeId, value);
+            if (!usedAttributeIds.Contains(attributeId))
+            {
+                usedAttributeIds.Add(attributeId);
+            }
         }
 
         public string AddDocument(string identifier = null)
@@ -112,5 +120,21 @@ namespace ExcelReaderConsole.Models
             return null;
         }
 
+        public IEnumerable<DocumentAttribute> Attributes
+        {
+            get { return attributes; }
+        }
+
+        public IEnumerable<DocumentAttribute> GetUsedDocumentAttributes()
+        {
+            foreach (var usedAttributeId in usedAttributeIds)
+            {
+                if (mapAttributIdToNumberIndexList.ContainsKey(usedAttributeId))
+                {
+                    int index = mapAttributIdToNumberIndexList[usedAttributeId];
+                    yield return attributes[index];
+                }
+            }
+        }
     }
 }

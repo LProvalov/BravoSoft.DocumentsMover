@@ -2,3 +2,6 @@
 packages/
 ExcelReaderConsole/bin
 ExcelReaderConsole/obj
+Releases/
+GUI/bin
+GUI/obj

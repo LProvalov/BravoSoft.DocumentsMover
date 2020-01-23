@@ -4,14 +4,14 @@ using System.IO;
 
 namespace ExcelReaderConsole
 {
-    public class Application
+    public class ConsoleApplication
     {
         private readonly AppSettings appSettings;
         private readonly DocumentsStorage ds;
         private readonly FileManager fileManager;
         private readonly CardBuilder cardBuilder;
 
-        public Application()
+        public ConsoleApplication()
         {
             appSettings = AppSettings.Instance;
             appSettings.LoadAppSettings();

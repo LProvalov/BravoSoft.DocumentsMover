@@ -10,7 +10,7 @@ namespace ExcelReaderConsole
             Console.OutputEncoding = Encoding.Unicode;
             try
             {
-                Application app = new Application();
+                ConsoleApplication app = new ConsoleApplication();
                 app.Run();
             }
             catch (Exception ex)
@@ -18,7 +18,7 @@ namespace ExcelReaderConsole
                 Console.WriteLine($"Exception occured:");
                 ConsolePrintException(ex);
             }
-            Console.WriteLine("End. Application will be close...");
+            Console.WriteLine("End. ConsoleApplication will be close...");
             Console.ReadLine();
         }
 

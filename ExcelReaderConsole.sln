@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 15 for Windows Desktop
-VisualStudioVersion = 15.0.28307.852
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelReaderConsole", "ExcelReaderConsole\ExcelReaderConsole.csproj", "{5DB9890D-5B23-4E20-8C9F-2FD68286EA88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUI", "GUI\GUI.csproj", "{4E1307B8-690A-4687-BA78-ACC9D596116C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{5DB9890D-5B23-4E20-8C9F-2FD68286EA88}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DB9890D-5B23-4E20-8C9F-2FD68286EA88}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DB9890D-5B23-4E20-8C9F-2FD68286EA88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E1307B8-690A-4687-BA78-ACC9D596116C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E1307B8-690A-4687-BA78-ACC9D596116C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E1307B8-690A-4687-BA78-ACC9D596116C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E1307B8-690A-4687-BA78-ACC9D596116C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
