@@ -26,13 +26,12 @@ namespace GUI
         private ExcelReader excelReader;
         private DocumentsStorage ds;
 
-        private readonly MainWindowModel model;
+        public readonly MainWindowModel model;
 
         public MainWindow()
         {
             InitializeComponent();
             model = new MainWindowModel();
-            DataContext = model;
         }
 
         private void InitColumnToTemplateGridItem(IEnumerable<string> newColumnNames)
@@ -50,11 +49,18 @@ namespace GUI
 
         private void MenuItemLoadTemplate_OnClick(object sender, RoutedEventArgs e)
         {
-            excelReader = new ExcelReader(AppSettings.Instance.GetExcelTemplateFilePath());
+            excelReader = new ExcelReader(ExcelReaderConsole.AppSettings.Instance.GetExcelTemplateFilePath());
             ds = new DocumentsStorage();
             excelReader.ReadData(ds);
+            RunEllipse.Fill = Brushes.GreenYellow;
+            RunMenuItem.IsEnabled = true;
 
             var attributes= ds.GetUsedDocumentAttributes();
+            
+            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute);
+            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute);
+            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.TextPDFAttribute);
+            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.AttachmentsAttribute);
             model.TemplateDataGridModel.TemplateDataGridColumns.AddRange(attributes.Select(item => item.Name));
             InitColumnToTemplateGridItem(model.TemplateDataGridModel.TemplateDataGridColumns);
             var documents = ds.GetDocuments();
@@ -62,6 +68,10 @@ namespace GUI
             {
                 var tgi = new TemplateGridItem();
                 model.TemplateDataGridModel.TemplateGridItems.Add(tgi);
+                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute, document.TextFileName);
+                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute, document.ScanFileName);
+                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextPDFAttribute, document.TextPdfFileName);
+                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.AttachmentsAttribute, document.AttachmentsFilesNames);
                 foreach (var attribute in attributes)
                 {
                     var documentAttrValue = document.GetValue(attribute.Identifier).Value;
@@ -73,7 +83,10 @@ namespace GUI
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            AppSettings appSettings = new AppSettings();
+            appSettings.Left = this.Left + this.Width / 2 - appSettings.Width / 2;
+            appSettings.Top = this.Top + this.Height / 2 - appSettings.Height / 2;
+            bool? dialogResult = appSettings.ShowDialog();
         }
 
         private void MenuItemExit_OnClick(object sender, RoutedEventArgs e)
@@ -84,6 +97,11 @@ namespace GUI
             {
                 this.Close();
             }
+        }
+
+        private void MenuItemRun_OnClick(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -12,5 +12,6 @@ namespace GUI.Models
     public class MainWindowModel
     {
         public TemplateDataGridModel TemplateDataGridModel { get; } = new TemplateDataGridModel();
+
     }
 }

@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:GUI">
+    <Style x:Key="TemplateDataGridHighlightRow" TargetType="DataGridRow">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsWarning}" Value="True">
+                <Setter Property="Background" Value="LightGoldenrodYellow"></Setter>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsWarning}" Value="False">
+                <Setter Property="Background" Value="Aquamarine"></Setter>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

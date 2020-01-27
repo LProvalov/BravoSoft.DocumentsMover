@@ -9,13 +9,13 @@ namespace GUI
     /// </summary>
     public partial class App : Application
     {
-        private readonly AppSettings appSettings;
+        private readonly ExcelReaderConsole.AppSettings appSettings;
         private readonly FileManager fileManager;
         private readonly CardBuilder cardBuilder;
 
         public App()
         {
-            appSettings = AppSettings.Instance;
+            appSettings = ExcelReaderConsole.AppSettings.Instance;
             appSettings.LoadAppSettings();
             fileManager = FileManager.Instance;
             cardBuilder = CardBuilder.Instance;

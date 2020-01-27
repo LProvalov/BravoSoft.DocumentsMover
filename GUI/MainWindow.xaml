@@ -5,18 +5,42 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="Auto"
+        DataContext="model">
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="25"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        <Menu Height="25" VerticalAlignment="Top" Grid.Row="0">
-            <MenuItem Header="File">
+        <Menu Height="auto" Padding="5" VerticalAlignment="Top" Grid.Row="0">
+            <MenuItem Header="File" Margin="5,0,5,0">
                 <MenuItem Header="Load Template" Click="MenuItemLoadTemplate_OnClick"></MenuItem>
                 <MenuItem Header="Settings" Click="MenuItemSettings_OnClick"></MenuItem>
                 <Separator></Separator>
                 <MenuItem Header="Exit" Click="MenuItemExit_OnClick"></MenuItem>
+            </MenuItem>
+            <MenuItem x:Name="RunMenuItem" Margin="5,0,5,0" Click="MenuItemRun_OnClick" IsEnabled="False">
+                <MenuItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="RunEllipse" Fill="Red" 
+                                 Height="10" Width="10" Margin="0, 0, 5, 0">
+                            <!--Ellipse.Style>
+                                <Style TargetType="{x:Type Ellipse}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRunnable}" Value="True">
+                                            <Setter Property="Fill"  Value="GreenYellow"></Setter>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsRunnable}" Value="False">
+                                            <Setter Property="Fill"  Value="Red"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style-->
+                        </Ellipse>
+                        <TextBlock>Run</TextBlock>
+                    </StackPanel>
+                </MenuItem.Header>
             </MenuItem>
         </Menu>
         <DataGrid Grid.Row="1"
@@ -24,6 +48,15 @@
                   Background="WhiteSmoke" 
                   AutoGenerateColumns="False"
                   DataContext="{Binding TemplateDataGridModel}">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=IsWarning}" Value="True">
+                            <Setter Property="Background" Value="LightGoldenrodYellow"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
         </DataGrid>
     </Grid>
 </Window>
