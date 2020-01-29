@@ -80,6 +80,7 @@
     <Compile Include="AppSettings.cs" />
     <Compile Include="AppSettingsModel.cs" />
     <Compile Include="CardBuilder.cs" />
+    <Compile Include="DocumentManager.cs" />
     <Compile Include="FileManager.cs" />
     <Compile Include="Models\Document.cs" />
     <Compile Include="Models\DocumentAttribute.cs" />

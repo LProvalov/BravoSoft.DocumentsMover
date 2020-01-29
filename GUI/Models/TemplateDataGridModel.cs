@@ -14,7 +14,6 @@ namespace GUI.Models
             public static readonly string ScanCopyAttribute = "Загрузить как скан-копию";
             public static readonly string TextPDFAttribute = "Текстовый PDF";
             public static readonly string AttachmentsAttribute = "Вложения";
-
         }
 
         public readonly ObservableRangeCollection<string> TemplateDataGridColumns = new ObservableRangeCollection<string>();

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows;
+using System.Windows.Threading;
 using ExcelReaderConsole;
 
 namespace GUI
@@ -9,23 +10,17 @@ namespace GUI
     /// </summary>
     public partial class App : Application
     {
-        private readonly ExcelReaderConsole.AppSettings appSettings;
-        private readonly FileManager fileManager;
-        private readonly CardBuilder cardBuilder;
+        DocumentManager documentManager = DocumentManager.Instance;
 
         public App()
         {
-            appSettings = ExcelReaderConsole.AppSettings.Instance;
-            appSettings.LoadAppSettings();
-            fileManager = FileManager.Instance;
-            cardBuilder = CardBuilder.Instance;
+        }
 
-            DirectoryInfo outputDirectory = new DirectoryInfo(appSettings.GetOutputDirectoryPath());
-            if (!outputDirectory.Exists)
-            {
-                outputDirectory.Create();
-            }
-            cardBuilder.SetOutputDirectory(outputDirectory.FullName);
+        private void App_OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            ExceptionHandling ehWindow = new ExceptionHandling(e.Exception);
+            ehWindow.ShowDialog();
+            e.Handled = true;
         }
     }
 }

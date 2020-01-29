@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -23,8 +24,7 @@ namespace GUI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ExcelReader excelReader;
-        private DocumentsStorage ds;
+        private readonly DocumentManager documentManager;
 
         public readonly MainWindowModel model;
 
@@ -32,8 +32,10 @@ namespace GUI
         {
             InitializeComponent();
             model = new MainWindowModel();
+            documentManager = DocumentManager.Instance;
+            documentManager.StatusChanged += DocumentManagerStatusChangedHandler;
         }
-
+        
         private void InitColumnToTemplateGridItem(IEnumerable<string> newColumnNames)
         {
             TemplateDataGrid.Columns.Clear();
@@ -49,13 +51,11 @@ namespace GUI
 
         private void MenuItemLoadTemplate_OnClick(object sender, RoutedEventArgs e)
         {
-            excelReader = new ExcelReader(ExcelReaderConsole.AppSettings.Instance.GetExcelTemplateFilePath());
-            ds = new DocumentsStorage();
-            excelReader.ReadData(ds);
+            documentManager.ReadDataFromTemplate();
             RunEllipse.Fill = Brushes.GreenYellow;
             RunMenuItem.IsEnabled = true;
 
-            var attributes= ds.GetUsedDocumentAttributes();
+            var attributes= documentManager.DocumentsStorage.GetUsedDocumentAttributes();
             
             model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute);
             model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute);
@@ -63,15 +63,55 @@ namespace GUI
             model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.AttachmentsAttribute);
             model.TemplateDataGridModel.TemplateDataGridColumns.AddRange(attributes.Select(item => item.Name));
             InitColumnToTemplateGridItem(model.TemplateDataGridModel.TemplateDataGridColumns);
-            var documents = ds.GetDocuments();
+
+            var documents = documentManager.DocumentsStorage.GetDocuments();
             foreach (var document in documents)
             {
                 var tgi = new TemplateGridItem();
                 model.TemplateDataGridModel.TemplateGridItems.Add(tgi);
-                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute, document.TextFileName);
-                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute, document.ScanFileName);
-                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextPDFAttribute, document.TextPdfFileName);
-                tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.AttachmentsAttribute, document.AttachmentsFilesNames);
+                if (!string.IsNullOrEmpty(document.TextFileName?.Trim()))
+                {
+                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute,
+                        document.TextFileName);
+                    tgi.TextFileExists = document.TextFileInfo?.Exists ?? false;
+                }
+
+                if (!string.IsNullOrEmpty(document.ScanFileName?.Trim()))
+                {
+                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute,
+                        document.ScanFileName);
+                    tgi.ScanFileExists = document.ScanFileInfo?.Exists ?? false;
+                }
+
+                if (!string.IsNullOrEmpty(document.TextPdfFileName?.Trim()))
+                {
+                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextPDFAttribute,
+                        document.TextPdfFileName);
+                    tgi.TextPDFFileExists = document.TextPdfFileInfo?.Exists ?? false;
+                }
+
+                if (!string.IsNullOrEmpty(document.AttachmentsFilesNames?.Trim()))
+                {
+                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.AttachmentsAttribute,
+                        document.AttachmentsFilesNames);
+                    tgi.AttachmentFiles = true;
+                    if (document.AttachmentsFilesInfos != null)
+                    {
+                        foreach (var fileInfo in document.AttachmentsFilesInfos)
+                        {
+                            if ((fileInfo?.Exists ?? false) != true)
+                            {
+                                tgi.AttachmentFiles = false;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        tgi.AttachmentFiles = false;
+                    }
+                }
+
                 foreach (var attribute in attributes)
                 {
                     var documentAttrValue = document.GetValue(attribute.Identifier).Value;
@@ -91,17 +131,36 @@ namespace GUI
 
         private void MenuItemExit_OnClick(object sender, RoutedEventArgs e)
         {
-            var messageBoxResult = MessageBox.Show("Are you sure want to close application?", "Exit",
-                MessageBoxButton.YesNo, MessageBoxImage.Information);
-            if (messageBoxResult == MessageBoxResult.Yes)
-            {
-                this.Close();
-            }
+            Close();
         }
 
         private void MenuItemRun_OnClick(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            documentManager.ProcessDocuments();
+            MessageBox.Show("Document processing is done.", "Processing result", MessageBoxButton.OK);
+        }
+
+        private void DocumentManagerStatusChangedHandler(DocumentManager.State oldState,
+            DocumentManager.State newState)
+        {
+            if (newState == DocumentManager.State.TemplateLoaded)
+            {
+                TemplateDataGridTextMessage.Visibility = Visibility.Hidden;
+            }
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            var messageBoxResult = MessageBox.Show("Are you sure want to close application?", "Exit",
+                MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (messageBoxResult == MessageBoxResult.Yes)
+            {
+                base.OnClosing(e);
+            }
+            else
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

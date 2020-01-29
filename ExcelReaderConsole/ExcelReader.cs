@@ -11,6 +11,7 @@ namespace ExcelReaderConsole
         private const int HeaderCount = 3;
 
         private FileInfo excelFileInfo;
+        private bool isDataRead = false;
         public ExcelReader(string filePath)
         {
             if (String.IsNullOrEmpty(filePath))

@@ -85,8 +85,6 @@ namespace ExcelReaderConsole
             DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
             if (!string.IsNullOrEmpty(document.TextFileName))
             {
-                string textFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), document.TextFileName);
-                document.TextFileInfo = new FileInfo(textFileFullPath);
                 if (document.TextFileInfo.Exists)
                 {
                     string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), 
@@ -102,7 +100,7 @@ namespace ExcelReaderConsole
                 }
                 else
                 {
-                    errorMessage = $"Text file can't be copied. {textFileFullPath} doesn't exist.";
+                    errorMessage = $"Text file can't be copied. {document.TextFileInfo.Name} doesn't exist.";
                 }
             }
             else

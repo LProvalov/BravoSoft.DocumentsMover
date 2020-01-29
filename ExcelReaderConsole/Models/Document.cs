@@ -79,7 +79,23 @@ namespace ExcelReaderConsole.Models
         }
 
         public string TextFileName { get; set; } = string.Empty;
-        public FileInfo TextFileInfo { get; set; } = null;
+
+        private FileInfo _textFileInfo;
+        public FileInfo TextFileInfo
+        {
+            get
+            {
+                if (_textFileInfo == null)
+                {
+                    string textFileFullPath =
+                        Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), this.TextFileName);
+                    _textFileInfo = new FileInfo(textFileFullPath);
+                }
+                return _textFileInfo;
+            }
+            set { _textFileInfo = value; }
+        }
+
         public FileInfo CopiedTextFileInfo { get; set; } = null;
 
         public string ScanFileName { get; set; } = string.Empty;

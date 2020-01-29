@@ -56,11 +56,18 @@
     <Compile Include="AppSettings.xaml.cs">
       <DependentUpon>AppSettings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExceptionHandling.xaml.cs">
+      <DependentUpon>ExceptionHandling.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Extensions\ObservableRangeCollection.cs" />
     <Compile Include="Models\MainWindowModel.cs" />
     <Compile Include="Models\TemplateDataGridModel.cs" />
     <Compile Include="Models\TemplateGridItem.cs" />
     <Page Include="AppSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ExceptionHandling.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
