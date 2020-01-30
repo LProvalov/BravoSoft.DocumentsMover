@@ -94,6 +94,26 @@ namespace ExcelReaderConsole
             return model.ExcelTemplateFilePath;
         }
 
+        public string ExcelTemplateFilePath
+        {
+            get
+            {
+                CheckAppSettingsLoaded();
+                return model.ExcelTemplateFilePath;
+            }
+            set
+            {
+                if (File.Exists(value))
+                {
+                    model.ExcelTemplateFilePath = value;
+                }
+                else
+                {
+                    model.ExcelTemplateFilePath = string.Empty;
+                }
+            }
+        }
+
         private string GetDirectoryPath(string path, string defaultFolder)
         {
             if (!string.IsNullOrEmpty(path))
@@ -108,16 +128,57 @@ namespace ExcelReaderConsole
                 return dir.FullName;
             }
         }
+
         public string GetInputDirectoryPath()
         {
             CheckAppSettingsLoaded();
             return GetDirectoryPath(model.InputDirectoryPath, "Input");
         }
+        public string InputDirectoryPath
+        {
+            get
+            {
+                CheckAppSettingsLoaded();
+                return GetDirectoryPath(model.InputDirectoryPath, "Input");
+            }
+            set
+            {
+                if (Directory.Exists(value))
+                {
+                    model.InputDirectoryPath = value;
+                }
+                else
+                {
+                    model.InputDirectoryPath = string.Empty;
+                }
+            }
+        }
+
         public string GetOutputDirectoryPath()
         {
             CheckAppSettingsLoaded();
             return GetDirectoryPath(model.OutputDirectoryPath, "Output");
         }
+        public string OutputDirectoryPath
+        {
+            get
+            {
+                CheckAppSettingsLoaded();
+                return GetDirectoryPath(model.OutputDirectoryPath, "Output");
+            }
+            set
+            {
+                if (Directory.Exists(value))
+                {
+                    model.OutputDirectoryPath = value;
+                }
+                else
+                {
+                    model.OutputDirectoryPath = string.Empty;
+                }
+            }
+        }
+
         public string GetEncoding()
         {
             CheckAppSettingsLoaded();

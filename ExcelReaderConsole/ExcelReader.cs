@@ -41,7 +41,7 @@ namespace ExcelReaderConsole
                 case TypeCode.Double:
                     {
                         valueType = typeof(double);
-                        value = reader.GetDouble(colPosition).ToString();
+                        value = reader.GetDouble(colPosition);
                     }
                     break;
                 default:
@@ -110,7 +110,14 @@ namespace ExcelReaderConsole
                         while (reader.Read())
                         {
                             workingRow++;
-                            string documentId = documentStorage.AddDocument();
+
+                            string documentIdentifier = null;
+                            ReadColumn(reader, 0, out object textFromReader, out Type textFromReaderType);
+                            if (textFromReader != null && !string.IsNullOrWhiteSpace(textFromReader.ToString()))
+                            {
+                                documentIdentifier = textFromReader.ToString();
+                            }
+                            string documentId = documentStorage.AddDocument(documentIdentifier);
                             ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 1, DocumentsStorage.FilesType.Text);
 
                             ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 2, DocumentsStorage.FilesType.ScanCopy);

@@ -25,8 +25,17 @@ namespace ExcelReaderConsole.Models
             usedAttributeIds = new List<string>();
         }
 
+        public void Clean()
+        {
+            attributes = null;
+            mapAttributIdToNumberIndexList = null;
+            usedAttributeIds = new List<string>();
+            documentsDictionary = new Dictionary<string, Document>();
+        }
+
         public void Init(int attributeCount)
         {
+            Clean();
             this.attributeCount = attributeCount;
             attributes = new List<DocumentAttribute>(attributeCount);
             mapAttributIdToNumberIndexList = new Dictionary<string, int>(attributeCount);

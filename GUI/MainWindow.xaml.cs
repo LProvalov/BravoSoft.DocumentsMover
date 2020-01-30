@@ -34,8 +34,21 @@ namespace GUI
             model = new MainWindowModel();
             documentManager = DocumentManager.Instance;
             documentManager.StatusChanged += DocumentManagerStatusChangedHandler;
+            documentManager.OverwriteDocumentFiles += OverwriteDocumentFiles;
         }
-        
+
+        private bool OverwriteDocumentFiles(Document document)
+        {
+            var result = MessageBox.Show($"Часть копируемых файлов документа ({document.Identifier}) уже существуют, перезаписать?", 
+                "Внимание!",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                return true;
+            }
+            return false;
+        }
+
         private void InitColumnToTemplateGridItem(IEnumerable<string> newColumnNames)
         {
             TemplateDataGrid.Columns.Clear();
@@ -49,14 +62,36 @@ namespace GUI
             }
         }
 
+        private string selectExcelTemplateFile()
+        {
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            openFileDialog.Multiselect = false;
+            openFileDialog.Filter = "Excel template file (*.excel)|*.xlsx";
+            openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            bool? dialogResult = openFileDialog.ShowDialog();
+            if (dialogResult.HasValue && dialogResult.Value == true)
+            {
+                return openFileDialog.FileName;
+            }
+            return null;
+        }
+
         private void MenuItemLoadTemplate_OnClick(object sender, RoutedEventArgs e)
         {
+            string templateFile = selectExcelTemplateFile();
+            if (!string.IsNullOrEmpty(templateFile))
+            {
+                ExcelReaderConsole.AppSettings.Instance.ExcelTemplateFilePath = templateFile;
+            }
             documentManager.ReadDataFromTemplate();
             RunEllipse.Fill = Brushes.GreenYellow;
             RunMenuItem.IsEnabled = true;
 
             var attributes= documentManager.DocumentsStorage.GetUsedDocumentAttributes();
-            
+
+            string idKey = "Идентификатор";
+            model.TemplateDataGridModel.TemplateDataGridColumns.Clear();
+            model.TemplateDataGridModel.TemplateDataGridColumns.Add(idKey);
             model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute);
             model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute);
             model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.TextPDFAttribute);
@@ -65,10 +100,16 @@ namespace GUI
             InitColumnToTemplateGridItem(model.TemplateDataGridModel.TemplateDataGridColumns);
 
             var documents = documentManager.DocumentsStorage.GetDocuments();
+            model.TemplateDataGridModel.TemplateGridItems.Clear();
             foreach (var document in documents)
             {
                 var tgi = new TemplateGridItem();
                 model.TemplateDataGridModel.TemplateGridItems.Add(tgi);
+                if (!string.IsNullOrEmpty(document.Identifier?.Trim()))
+                {
+                    tgi.TemplateDataGridRows.Add(idKey, document.Identifier);
+                }
+
                 if (!string.IsNullOrEmpty(document.TextFileName?.Trim()))
                 {
                     tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute,

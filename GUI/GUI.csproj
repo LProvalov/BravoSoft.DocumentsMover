@@ -36,6 +36,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -60,9 +61,11 @@
       <DependentUpon>ExceptionHandling.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\ObservableRangeCollection.cs" />
+    <Compile Include="Models\AppSettingsViewModel.cs" />
     <Compile Include="Models\MainWindowModel.cs" />
     <Compile Include="Models\TemplateDataGridModel.cs" />
     <Compile Include="Models\TemplateGridItem.cs" />
+    <Compile Include="WpfExtensions.cs" />
     <Page Include="AppSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

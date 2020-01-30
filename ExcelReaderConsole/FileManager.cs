@@ -79,7 +79,57 @@ namespace ExcelReaderConsole
             return new FileInfo(textFilePath);
         }
 
-        public bool TryToCopyTextFile(Document document, out string errorMessage)
+        public string MakeNewTextFilePath(Document document)
+        {
+            return document.TextFileInfo != null ? 
+                Path.Combine(appSettings.GetOutputDirectoryPath(),
+                GetTextDirName(document),
+                $"{document.Identifier}_7845{document.TextFileInfo.Extension}") :
+                string.Empty;
+        }
+        public string MakeNewScanFilePath(Document document)
+        {
+            return document.ScanFileInfo != null ? 
+                Path.Combine(appSettings.GetOutputDirectoryPath(), 
+                GetAttachDirName(document), document.ScanFileInfo.Name) : 
+                string.Empty;
+        }
+        public string MakeNewTextPdfPath(Document document)
+        {
+            return document.TextPdfFileInfo != null ?
+                Path.Combine(appSettings.GetOutputDirectoryPath(),
+                GetTextDirName(document),
+                $"{document.Identifier}{document.TextPdfFileInfo.Extension}") :
+                string.Empty;
+        }
+        public bool NeedToOverwriteAttachments(Document document)
+        {
+            bool result = false;
+            int attachmentCount = 0;
+            if (!string.IsNullOrEmpty(document.AttachmentsFilesNames))
+            {
+                foreach (var fileName in document.AttachmentsFilesNames.Split(';'))
+                {
+                    string attachmentFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), fileName.Trim());
+                    FileInfo attachmentFileInfo = new FileInfo(attachmentFileFullPath);
+                    if (attachmentFileInfo.Exists)
+                    {
+                        attachmentCount++;
+                        string newAttachmentFileName = Path.Combine(appSettings.GetOutputDirectoryPath(),
+                            GetAttachDirName(document),
+                            $"Вложение{attachmentCount}{attachmentFileInfo.Extension}");
+                        if (File.Exists(newAttachmentFileName))
+                        {
+                            result = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public bool TryToCopyTextFile(Document document, out string errorMessage, bool overwrite)
         {
             errorMessage = string.Empty;
             DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
@@ -87,10 +137,8 @@ namespace ExcelReaderConsole
             {
                 if (document.TextFileInfo.Exists)
                 {
-                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), 
-                        GetTextDirName(document), 
-                        $"{document.Identifier}_7845{document.TextFileInfo.Extension}");
-                    File.Copy(document.TextFileInfo.FullName, newFilePath);
+                    string newFilePath = MakeNewTextFilePath(document);
+                    File.Copy(document.TextFileInfo.FullName, newFilePath, overwrite);
                     FileInfo newFileInfo = new FileInfo(newFilePath);
                     if (newFileInfo.Exists)
                     {
@@ -110,7 +158,7 @@ namespace ExcelReaderConsole
             return false;
         }
 
-        public bool TryToCopyScanFile(Document document, out string errorMessage)
+        public bool TryToCopyScanFile(Document document, out string errorMessage, bool overwrite)
         {
             errorMessage = string.Empty;
             DirectoryInfo documentAdditionalDirectory = CreateDirectoriesForAdditionalFiles(document);
@@ -120,8 +168,8 @@ namespace ExcelReaderConsole
                 document.ScanFileInfo = new FileInfo(scanFileFullPath);
                 if (document.ScanFileInfo.Exists)
                 {
-                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(), GetAttachDirName(document), document.ScanFileInfo.Name);
-                    File.Copy(document.ScanFileInfo.FullName, newFilePath);
+                    string newFilePath = MakeNewScanFilePath(document);
+                    File.Copy(document.ScanFileInfo.FullName, newFilePath, overwrite);
                     FileInfo newFileInfo = new FileInfo(newFilePath);
                     if (newFileInfo.Exists)
                     {
@@ -142,7 +190,7 @@ namespace ExcelReaderConsole
             return false;
         }
 
-        public bool TryToCopyTextPdfFile(Document document, out string errorMessage)
+        public bool TryToCopyTextPdfFile(Document document, out string errorMessage, bool overwrite)
         {
             errorMessage = string.Empty;
             DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
@@ -152,10 +200,8 @@ namespace ExcelReaderConsole
                 document.TextPdfFileInfo = new FileInfo(textPdfFileFullPath);
                 if (document.TextPdfFileInfo.Exists)
                 {
-                    string newFilePath = Path.Combine(appSettings.GetOutputDirectoryPath(),
-                        GetTextDirName(document),
-                        $"{document.Identifier}{document.TextPdfFileInfo.Extension}");
-                    File.Copy(document.TextPdfFileInfo.FullName, newFilePath);
+                    string newFilePath = MakeNewTextPdfPath(document);
+                    File.Copy(document.TextPdfFileInfo.FullName, newFilePath, overwrite);
                     FileInfo newPdfFileInfo = new FileInfo(newFilePath);
                     if (newPdfFileInfo.Exists)
                     {
@@ -175,7 +221,7 @@ namespace ExcelReaderConsole
             return false;
         }
 
-        public bool TryToCopyAttachmentFiles(Document document, out string errorMessage)
+        public bool TryToCopyAttachmentFiles(Document document, out string errorMessage, bool overwrite)
         {
             errorMessage = string.Empty;
 
@@ -195,9 +241,9 @@ namespace ExcelReaderConsole
                         attachmentCount++;
                         attachmentFilesInfos.Add(attachmentFileInfo);
                         string newAttachmentFileName = Path.Combine(appSettings.GetOutputDirectoryPath(),
-                            GetAttachDirName(document),
-                            $"Вложение{attachmentCount}{attachmentFileInfo.Extension}");
-                        File.Copy(attachmentFileInfo.FullName, newAttachmentFileName);
+                                GetAttachDirName(document),
+                                $"Вложение{attachmentCount}{attachmentFileInfo.Extension}");
+                        File.Copy(attachmentFileInfo.FullName, newAttachmentFileName, overwrite);
                         FileInfo newAttachmentFileInfo = new FileInfo(newAttachmentFileName);
                         if (newAttachmentFileInfo.Exists)
                         {
