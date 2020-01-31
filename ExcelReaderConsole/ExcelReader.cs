@@ -54,20 +54,29 @@ namespace ExcelReaderConsole
         }
 
         private string ReadTextFieldFromExcelReader(IExcelDataReader reader,
-            DocumentsStorage documentStorage, string documentId, int colPosition, DocumentsStorage.FilesType filesType)
+            Document document, int colPosition, DocumentsStorage.FilesType filesType)
         {
             ReadColumn(reader, colPosition, out object textFromReader, out Type textFromReaderType);
             if (textFromReaderType == typeof(string) && !string.IsNullOrEmpty(textFromReader as string))
             {
-                if (filesType == DocumentsStorage.FilesType.Text) documentStorage.SetTextFileName(documentId, textFromReader as string);
+                if (filesType == DocumentsStorage.FilesType.Text)
+                {
+                    document.TextFileName = textFromReader as string;
+                }
                 else if (filesType == DocumentsStorage.FilesType.ScanCopy)
                 {
-                    documentStorage.SetScanFileName(documentId, textFromReader as string);
-                    documentStorage.SetAttributeValue(documentId, "7860:", new DocumentAttributeValue(textFromReader as string, typeof(string)));
+                    document.ScanFileName = textFromReader as string;
+                    document.SetAttributeValue("7860:", new DocumentAttributeValue(textFromReader as string, typeof(string)));
                 }
-                else if (filesType == DocumentsStorage.FilesType.TextPdf) documentStorage.SetTextPdfFileName(documentId, textFromReader as string);
-                else if (filesType == DocumentsStorage.FilesType.Attachments) documentStorage.SetAttachmentsFilesName(documentId, textFromReader as string);
-                return documentId;
+                else if (filesType == DocumentsStorage.FilesType.TextPdf)
+                {
+                    document.TextPdfFileName = textFromReader as string;
+                }
+                else if (filesType == DocumentsStorage.FilesType.Attachments)
+                {
+                    document.AttachmentsFilesNames = textFromReader as string;
+                }
+                return document.Identifier;
             }
             return string.Empty;
         }
@@ -117,15 +126,17 @@ namespace ExcelReaderConsole
                             {
                                 documentIdentifier = textFromReader.ToString();
                             }
-                            string documentId = documentStorage.AddDocument(documentIdentifier);
-                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 1, DocumentsStorage.FilesType.Text);
+                            Document document = documentStorage.CreateDocument(documentIdentifier);
+                            ReadTextFieldFromExcelReader(reader, document, 1, DocumentsStorage.FilesType.Text);
 
-                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 2, DocumentsStorage.FilesType.ScanCopy);
+                            ReadTextFieldFromExcelReader(reader, document, 2, DocumentsStorage.FilesType.ScanCopy);
                             
-                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 3, DocumentsStorage.FilesType.TextPdf);
+                            ReadTextFieldFromExcelReader(reader, document, 3, DocumentsStorage.FilesType.TextPdf);
                             
-                            ReadTextFieldFromExcelReader(reader, documentStorage, documentId, 4, DocumentsStorage.FilesType.Attachments);
-                            
+                            ReadTextFieldFromExcelReader(reader, document, 4, DocumentsStorage.FilesType.Attachments);
+
+                            bool shouldToBeAddedInDocumentStorage = false;
+
                             for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
                             {
                                 object value;
@@ -135,13 +146,20 @@ namespace ExcelReaderConsole
                                 ReadColumn(reader, colPosition, out value, out valueType);
                                 if (value != null)
                                 {
-                                    DocumentAttributeValue documentValue = new DocumentAttributeValue(value, valueType);
-                                    if (string.IsNullOrEmpty(documentId))
-                                    {
-                                        documentId = documentStorage.AddDocument(string.Format("{0:D5}", documentCount++));
-                                    }
-                                    documentStorage.SetAttributeValue(documentId, attributeId, documentValue);
+                                    document.SetAttributeValue(attributeId, new DocumentAttributeValue(value, valueType));
+                                    shouldToBeAddedInDocumentStorage = true;
+                                    //DocumentAttributeValue documentValue = new DocumentAttributeValue(value, valueType);
+                                    //if (string.IsNullOrEmpty(documentId))
+                                    //{
+                                    //    documentId = documentStorage.AddDocument(string.Format("{0:D5}", documentCount++));
+                                    //}
+                                    //documentStorage.SetAttributeValue(document.Identifier, attributeId, documentValue);
                                 }
+                            }
+
+                            if (shouldToBeAddedInDocumentStorage)
+                            {
+                                documentStorage.AddDocument(document);
                             }
                         }
                     } while (reader.NextResult());

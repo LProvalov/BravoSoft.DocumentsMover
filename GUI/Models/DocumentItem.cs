@@ -19,7 +19,11 @@ namespace GUI.Models
             attributeValues = new Dictionary<string, string>();
             foreach (var attribute in attributes)
             {
-                attributeValues.Add(attribute.Identifier, document.GetValue(attribute.Identifier).Value.ToString());
+                if (document.GetValue(attribute.Identifier) != null)
+                {
+                    attributeValues.Add(attribute.Identifier,
+                        document.GetValue(attribute.Identifier).Value.ToString());
+                }
             }
 
             Warning = false;

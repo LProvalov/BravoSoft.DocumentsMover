@@ -27,7 +27,7 @@ namespace ExcelReaderConsole.Models
             get { return this.identifier; }
         }
 
-        public void SetValue(string attributeId, DocumentAttributeValue value)
+        public void SetAttributeValue(string attributeId, DocumentAttributeValue value)
         {
             if (string.IsNullOrEmpty(attributeId) || value == null)
                 throw new Exception("AttributeIs or Value can't be null or empty");

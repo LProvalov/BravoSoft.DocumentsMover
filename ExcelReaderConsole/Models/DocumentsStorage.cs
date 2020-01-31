@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 
 namespace ExcelReaderConsole.Models
@@ -71,7 +72,7 @@ namespace ExcelReaderConsole.Models
             if (string.IsNullOrEmpty(attributeId)) throw new Exception("attributeId can't be null or empty");
             if (value == null) throw new Exception("document attribute value can't be null");
 
-            documentsDictionary[documentId].SetValue(attributeId, value);
+            documentsDictionary[documentId].SetAttributeValue(attributeId, value);
             if (!usedAttributeIds.Contains(attributeId))
             {
                 usedAttributeIds.Add(attributeId);
@@ -88,27 +89,69 @@ namespace ExcelReaderConsole.Models
             return newDocument.Identifier;
         }
 
+        private void AddUsedAttributes(Document document)
+        {
+            foreach (var attr in document.GetNotNullAttributes())
+            {
+                if (!usedAttributeIds.Contains(attr.Key))
+                {
+                    usedAttributeIds.Add(attr.Key);
+                }
+            }
+        }
+
+        public string AddDocument(Document document)
+        {
+            if (document != null)
+            {
+                documentsDictionary.Add(document.Identifier, document);
+                AddUsedAttributes(document);
+                return document.Identifier;
+            }
+            throw new ArgumentException("[DocumentStorage] [AddDocument] Document can't be null ");
+        }
+
+        public Document CreateDocument(string identifier = null)
+        {
+            string documentIdentifier = string.IsNullOrEmpty(identifier)
+                ? string.Format("{0:D5}", documentsDictionary.Count + 1)
+                : identifier;
+            return new Document(documentIdentifier, attributes);
+        }
+
         public void SetTextFileName(string documentId, string textFileName)
         {
-            if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
+            if (!documentsDictionary.ContainsKey(documentId))
+            {
+                throw new Exception($"[DocumentStorage] [SetTextFileName] Incorrect documentId: {documentId}");
+            }
             documentsDictionary[documentId].TextFileName = textFileName;
         }
 
         public void SetScanFileName(string documentId, string scanFileName)
         {
-            if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
+            if (!documentsDictionary.ContainsKey(documentId))
+            {
+                throw new Exception($"[DocumentStorage] [SetScanFileName] Incorrect documentId: {documentId}");
+            }
             documentsDictionary[documentId].ScanFileName = scanFileName;
         }
 
         public void SetTextPdfFileName(string documentId, string textPdfFilesNames)
         {
-            if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
+            if (!documentsDictionary.ContainsKey(documentId))
+            {
+                throw new Exception($"[DocumentStorage] [SetTextPdfFileName] Incorrect documentId: {documentId}");
+            }
             documentsDictionary[documentId].TextPdfFileName = textPdfFilesNames;
         }
 
         public void SetAttachmentsFilesName(string documentId, string attachmentsFilesNames)
         {
-            if (!documentsDictionary.ContainsKey(documentId)) throw new Exception($"Incorrect documentId: {documentId}");
+            if (!documentsDictionary.ContainsKey(documentId))
+            {
+                throw new Exception($"[DocumentStorage] [SetAttachmentsFilesName] Incorrect documentId: {documentId}");
+            }
             documentsDictionary[documentId].AttachmentsFilesNames = attachmentsFilesNames;
         }
 
