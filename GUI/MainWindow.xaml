@@ -5,15 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="Auto"
-        DataContext="model"
-        >
+        Title="MainWindow" Height="450" Width="Auto">
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
+
         <Menu Height="auto" Padding="5" VerticalAlignment="Top" Grid.Row="0">
             <MenuItem Header="File" Margin="5,0,5,0">
                 <MenuItem Header="Load Template" Click="MenuItemLoadTemplate_OnClick"></MenuItem>
@@ -32,17 +31,35 @@
                 </MenuItem.Header>
             </MenuItem>
         </Menu>
-        <DataGrid Grid.Row="1"
-                  x:Name="TemplateDataGrid"
-                  Background="WhiteSmoke" 
-                  AutoGenerateColumns="False"
-                  DataContext="{Binding TemplateDataGridModel}">
-        </DataGrid>
-        <TextBlock Grid.Row="1"
-                   x:Name="TemplateDataGridTextMessage"
-                   VerticalAlignment="Center"
-                   HorizontalAlignment="Center">
-            Load excel template
-        </TextBlock>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="50"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <ListView x:Name="listView" Grid.Row="0" ItemsSource="{Binding Documents, Mode=OneWay}" 
+                      MouseDoubleClick="listView_MouseDoubleClick">
+                <ListView.View>
+                    <GridView x:Name="gridView">
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Warning}" Value="True">
+                                <Setter Property="Background" Value="LightYellow"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ProcessedSuccessfully}" Value="True">
+                                <Setter Property="Background" Value="LightGreen"></Setter>
+                            </DataTrigger>
+                            <!--DataTrigger Binding="{Binding ProcessedSuccessfully}" Value="False">
+                                <Setter Property="Background" Value="LightCoral"></Setter>
+                            </DataTrigger-->
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </Grid>
     </Grid>
 </Window>

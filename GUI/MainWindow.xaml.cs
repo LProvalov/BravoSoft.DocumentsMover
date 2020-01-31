@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -32,9 +33,29 @@ namespace GUI
         {
             InitializeComponent();
             model = new MainWindowModel();
+            DataContext = model;
             documentManager = DocumentManager.Instance;
             documentManager.StatusChanged += DocumentManagerStatusChangedHandler;
             documentManager.OverwriteDocumentFiles += OverwriteDocumentFiles;
+            documentManager.OverwriteDocumentCards += OverwriteDocumentCards;
+            documentManager.DocumentProcessed += DocumentProcessed;
+        }
+
+        private void DocumentProcessed(Document obj)
+        {
+            model.SetDocumentProcessed(obj.Identifier, true);
+        }
+
+        private bool OverwriteDocumentCards()
+        {
+            var result = MessageBox.Show($"Существуют катрочки для данного документа, перезаписать?",
+                "Внимание!",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                return true;
+            }
+            return false;
         }
 
         private bool OverwriteDocumentFiles(Document document)
@@ -49,15 +70,40 @@ namespace GUI
             return false;
         }
 
-        private void InitColumnToTemplateGridItem(IEnumerable<string> newColumnNames)
+        private void InitColumnToListView(IEnumerable<DocumentAttribute> attributes)
         {
-            TemplateDataGrid.Columns.Clear();
-            foreach (string name in newColumnNames)
+            gridView.Columns.Clear();
+            gridView.Columns.Add(new GridViewColumn()
             {
-                TemplateDataGrid.Columns.Add(new DataGridTextColumn()
+                Header = "Идентификатор",
+                DisplayMemberBinding = new Binding($"Identifier")
+            });
+            gridView.Columns.Add(new GridViewColumn()
+            {
+                Header = "Текстовый файл",
+                DisplayMemberBinding = new Binding($"TextFileName")
+            });
+            gridView.Columns.Add(new GridViewColumn()
+            {
+                Header = "Загрузить как скан копию",
+                DisplayMemberBinding = new Binding($"ScanFileName")
+            });
+            gridView.Columns.Add(new GridViewColumn()
+            {
+                Header = "Текстовый PDF",
+                DisplayMemberBinding = new Binding($"TextPdfFileName")
+            });
+            gridView.Columns.Add(new GridViewColumn()
+            {
+                Header = "Вложения",
+                DisplayMemberBinding = new Binding($"AttachmentsFilesNames")
+            });
+            foreach (var attribute in attributes)
+            {
+                gridView.Columns.Add(new GridViewColumn()
                 {
-                    Binding = new Binding($"TemplateDataGridRows[{name}]"),
-                    Header = name
+                    Header = attribute.Name,
+                    DisplayMemberBinding = new Binding($"[{attribute.Identifier}]")
                 });
             }
         }
@@ -83,83 +129,26 @@ namespace GUI
             {
                 ExcelReaderConsole.AppSettings.Instance.ExcelTemplateFilePath = templateFile;
             }
+            else
+            {
+                return;
+            }
             documentManager.ReadDataFromTemplate();
             RunEllipse.Fill = Brushes.GreenYellow;
             RunMenuItem.IsEnabled = true;
 
-            var attributes= documentManager.DocumentsStorage.GetUsedDocumentAttributes();
-
-            string idKey = "Идентификатор";
-            model.TemplateDataGridModel.TemplateDataGridColumns.Clear();
-            model.TemplateDataGridModel.TemplateDataGridColumns.Add(idKey);
-            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute);
-            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute);
-            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.TextPDFAttribute);
-            model.TemplateDataGridModel.TemplateDataGridColumns.Add(TemplateDataGridModel.AdditionalAttributes.AttachmentsAttribute);
-            model.TemplateDataGridModel.TemplateDataGridColumns.AddRange(attributes.Select(item => item.Name));
-            InitColumnToTemplateGridItem(model.TemplateDataGridModel.TemplateDataGridColumns);
-
-            var documents = documentManager.DocumentsStorage.GetDocuments();
-            model.TemplateDataGridModel.TemplateGridItems.Clear();
-            foreach (var document in documents)
+            var attributes = documentManager.DocumentsStorage.GetUsedDocumentAttributes();
+            InitColumnToListView(attributes);
+            
+            var documentItems = new ConcurrentDictionary<string, DocumentItem>();
+            foreach (var document in documentManager.DocumentsStorage.GetDocuments())
             {
-                var tgi = new TemplateGridItem();
-                model.TemplateDataGridModel.TemplateGridItems.Add(tgi);
-                if (!string.IsNullOrEmpty(document.Identifier?.Trim()))
-                {
-                    tgi.TemplateDataGridRows.Add(idKey, document.Identifier);
-                }
-
-                if (!string.IsNullOrEmpty(document.TextFileName?.Trim()))
-                {
-                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextFileAttribute,
-                        document.TextFileName);
-                    tgi.TextFileExists = document.TextFileInfo?.Exists ?? false;
-                }
-
-                if (!string.IsNullOrEmpty(document.ScanFileName?.Trim()))
-                {
-                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.ScanCopyAttribute,
-                        document.ScanFileName);
-                    tgi.ScanFileExists = document.ScanFileInfo?.Exists ?? false;
-                }
-
-                if (!string.IsNullOrEmpty(document.TextPdfFileName?.Trim()))
-                {
-                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.TextPDFAttribute,
-                        document.TextPdfFileName);
-                    tgi.TextPDFFileExists = document.TextPdfFileInfo?.Exists ?? false;
-                }
-
-                if (!string.IsNullOrEmpty(document.AttachmentsFilesNames?.Trim()))
-                {
-                    tgi.TemplateDataGridRows.Add(TemplateDataGridModel.AdditionalAttributes.AttachmentsAttribute,
-                        document.AttachmentsFilesNames);
-                    tgi.AttachmentFiles = true;
-                    if (document.AttachmentsFilesInfos != null)
-                    {
-                        foreach (var fileInfo in document.AttachmentsFilesInfos)
-                        {
-                            if ((fileInfo?.Exists ?? false) != true)
-                            {
-                                tgi.AttachmentFiles = false;
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        tgi.AttachmentFiles = false;
-                    }
-                }
-
-                foreach (var attribute in attributes)
-                {
-                    var documentAttrValue = document.GetValue(attribute.Identifier).Value;
-                    tgi.TemplateDataGridRows.Add(attribute.Name, documentAttrValue);
-                }
+                documentItems.AddOrUpdate(document.Identifier, 
+                    (id) => new DocumentItem(document, attributes),
+                    ((s, item) => new DocumentItem(document, attributes)));
             }
-            TemplateDataGrid.ItemsSource = model.TemplateDataGridModel.TemplateGridItems;
+
+            model.SetDocuments(documentItems);
         }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
@@ -184,10 +173,6 @@ namespace GUI
         private void DocumentManagerStatusChangedHandler(DocumentManager.State oldState,
             DocumentManager.State newState)
         {
-            if (newState == DocumentManager.State.TemplateLoaded)
-            {
-                TemplateDataGridTextMessage.Visibility = Visibility.Hidden;
-            }
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -202,6 +187,22 @@ namespace GUI
             {
                 e.Cancel = true;
             }
+        }
+        
+        private void listView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var index = listView.SelectedIndex;
+            var selectedItem = listView.Items[index] as DocumentItem;
+            var document = documentManager.DocumentsStorage.GetDocument(selectedItem.Identifier);
+            
+            // TODO: prepare documentWindowModel and put it to documentWindow constructor
+            DocumentWindowModel dwModel = new DocumentWindowModel();
+            dwModel.WindowHandler = document.Identifier;
+            DocumentWindow documentWindow = new DocumentWindow(dwModel);
+
+            documentWindow.Left = this.Left + this.Width / 2 - documentWindow.Width / 2;
+            documentWindow.Top = this.Top + this.Height / 2 - documentWindow.Height / 2;
+            documentWindow.ShowDialog();
         }
     }
 }

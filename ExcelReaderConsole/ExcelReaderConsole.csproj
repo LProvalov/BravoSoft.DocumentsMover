@@ -82,6 +82,10 @@
     <Compile Include="CardBuilder.cs" />
     <Compile Include="DocumentManager.cs" />
     <Compile Include="FileManager.cs" />
+    <Compile Include="Logger\ErrorMessage.cs" />
+    <Compile Include="Logger\LoggerManager.cs" />
+    <Compile Include="Logger\LogMessage.cs" />
+    <Compile Include="Logger\MessageBase.cs" />
     <Compile Include="Models\Document.cs" />
     <Compile Include="Models\DocumentAttribute.cs" />
     <Compile Include="Models\DocumentAttributeValue.cs" />
@@ -109,5 +113,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

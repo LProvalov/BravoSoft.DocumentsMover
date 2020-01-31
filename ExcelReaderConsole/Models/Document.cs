@@ -56,6 +56,19 @@ namespace ExcelReaderConsole.Models
             }
         }
 
+        public string this[string attributeId]
+        {
+            get
+            {
+                if (values.ContainsKey(attributeId))
+                {
+                    return values[attributeId].Value.ToString();
+                }
+
+                return string.Empty;
+            }
+        }
+
         public IEnumerable<DocumentAttributeValue> GetNotNullValues()
         {
             foreach (var value in values.Values)

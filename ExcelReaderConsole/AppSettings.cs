@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace ExcelReaderConsole
@@ -183,6 +184,33 @@ namespace ExcelReaderConsole
         {
             CheckAppSettingsLoaded();
             return model.Encoding;
+        }
+
+        public bool Validate(out string errorMsg)
+        {
+            bool valid = true;
+            errorMsg = string.Empty;
+            StringBuilder sb = new StringBuilder();
+            if (string.IsNullOrEmpty(this.InputDirectoryPath?.Trim()))
+            {
+                valid = false;
+                sb.AppendLine("Input directory is null or empty.");
+            }
+
+            if (string.IsNullOrEmpty(this.OutputDirectoryPath?.Trim()))
+            {
+                valid = false;
+                sb.AppendLine("Output directory is null or empty.");
+            }
+
+            if (string.IsNullOrEmpty(this.ExcelTemplateFilePath?.Trim()))
+            {
+                valid = false;
+                sb.AppendLine("Template file path is null or empty.");
+            }
+
+            if (!valid) errorMsg = sb.ToString();
+            return valid;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ExcelReaderConsole.Logger;
 using ExcelReaderConsole.Models;
 
 namespace ExcelReaderConsole
@@ -13,7 +13,6 @@ namespace ExcelReaderConsole
         {
             get { return _instance ?? (_instance = new DocumentManager()); }
         }
-
         public enum State
         {
             InitializationDone = 0,
@@ -24,9 +23,10 @@ namespace ExcelReaderConsole
             ErrorOccured,
         }
 
+        public Action<Document> DocumentProcessed;
         public EventHandler StatusStringChanged;
         public Action<State, State> StatusChanged;
-        public Action<Document, StringBuilder> DocumentProcessingErrorOccured = null;
+
         public Func<Document, bool> OverwriteDocumentFiles = null;
         public Func<bool> OverwriteDocumentCards = null;
 
@@ -40,7 +40,6 @@ namespace ExcelReaderConsole
         }
 
         private State _state;
-
         protected State _State
         {
             set
@@ -55,9 +54,7 @@ namespace ExcelReaderConsole
         private readonly DocumentsStorage ds;
         private readonly FileManager fileManager;
         private readonly CardBuilder cardBuilder;
-
-        private readonly StringBuilder errorLogBuilder = new StringBuilder();
-        private readonly StringBuilder statusLogBuilder = new StringBuilder();
+        public readonly Logger.LoggerManager loggerManager;
         
         private DocumentManager()
         {
@@ -68,6 +65,7 @@ namespace ExcelReaderConsole
             ds = new DocumentsStorage();
             fileManager = FileManager.Instance;
             cardBuilder = CardBuilder.Instance;
+            loggerManager = LoggerManager.Instance;
             _State = State.InitializationDone;
         }
 
@@ -76,6 +74,12 @@ namespace ExcelReaderConsole
             _State = State.TemplateLoading;
             try
             {
+                if (!appSettings.Validate(out string errorMsg))
+                {
+
+                    _State = State.ErrorOccured;
+                    return;
+                }
                 string excelPath = appSettings.GetExcelTemplateFilePath();
                 FileInfo excelFile = new FileInfo(excelPath);
                 StatusStringChanged(this, new StatusStringChangedArgs($"Template is loading: {excelPath}"));
@@ -118,75 +122,102 @@ namespace ExcelReaderConsole
             }
             cardBuilder.SetOutputDirectory(outputDirectory.FullName);
 
-            int copyFilesErrorCount = 0;
-
             StatusStringChanged(this, new StatusStringChangedArgs("Documents are processing..."));
             foreach (var document in ds.GetDocuments())
             {
                 string errorMessage;
-                bool copyErrorOccured = false;
 
                 string newTextFilePath = fileManager.MakeNewTextFilePath(document);
                 string newScanFilePath = fileManager.MakeNewScanFilePath(document);
                 string newTextPdfFilePath = fileManager.MakeNewTextPdfPath(document);
 
                 bool overwrite = false;
-                if (File.Exists(newTextFilePath) || File.Exists(newScanFilePath) || File.Exists(newTextPdfFilePath) ||
-                    fileManager.NeedToOverwriteAttachments(document))
+                bool tfp = File.Exists(newTextFilePath);
+                bool sfp = File.Exists(newScanFilePath);
+                bool tpfp = File.Exists(newTextPdfFilePath);
+                bool ato = fileManager.NeedToOverwriteAttachments(document);
+                if ( tfp || sfp || tpfp || ato)
                 {
                     overwrite = OverwriteDocumentFiles?.Invoke(document) ?? false;
+                    loggerManager.Add(new LogMessage(document, $"TextFile exists: {tfp}"));
+                    loggerManager.Add(new LogMessage(document, $"TextScanFile exists: {sfp}"));
+                    loggerManager.Add(new LogMessage(document, $"TextPdfFile exists: {tpfp}"));
+                    loggerManager.Add(new LogMessage(document, $"Attachments need to overwrite: {ato}"));
+                    loggerManager.Add(new LogMessage(document, $"Существующие файлы будут перезаписаны: {overwrite}"));
                 }
 
-                fileManager.TryToCopyTextFile(document, out errorMessage, overwrite);
-                if (!string.IsNullOrEmpty(errorMessage))
+                if (!string.IsNullOrEmpty(document.TextFileName))
                 {
-                    errorLogBuilder.AppendLine(errorMessage);
-                    copyErrorOccured = true;
+                    fileManager.TryToCopyTextFile(document, out errorMessage, overwrite);
+                    if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        loggerManager.Add(new ErrorMessage(document, errorMessage));
+                    }
                 }
 
-                fileManager.TryToCopyScanFile(document, out errorMessage, overwrite);
-                if (!string.IsNullOrEmpty(errorMessage))
+                if (!string.IsNullOrEmpty(document.ScanFileName))
                 {
-                    errorLogBuilder.AppendLine(errorMessage);
-                    copyErrorOccured = true;
+                    fileManager.TryToCopyScanFile(document, out errorMessage, overwrite);
+                    if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        loggerManager.Add(new ErrorMessage(document, errorMessage));
+                    }
                 }
 
-                fileManager.TryToCopyTextPdfFile(document, out errorMessage, overwrite);
-                if (!string.IsNullOrEmpty(errorMessage))
+                if (!string.IsNullOrEmpty(document.TextPdfFileName))
                 {
-                    errorLogBuilder.AppendLine(errorMessage);
-                    copyErrorOccured = true;
+                    fileManager.TryToCopyTextPdfFile(document, out errorMessage, overwrite);
+                    if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        loggerManager.Add(new ErrorMessage(document, errorMessage));
+                    }
                 }
 
-                fileManager.TryToCopyAttachmentFiles(document, out errorMessage, overwrite);
-                if (!string.IsNullOrEmpty(errorMessage))
+                if (!string.IsNullOrEmpty(document.AttachmentsFilesNames))
                 {
-                    errorLogBuilder.AppendLine(errorMessage);
-                    copyErrorOccured = true;
+                    fileManager.TryToCopyAttachmentFiles(document, out errorMessage, overwrite);
+                    if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        loggerManager.Add(new ErrorMessage(document, errorMessage));
+                    }
                 }
 
-                if (copyErrorOccured) copyFilesErrorCount++;
+                bool overwriteCard = false;
+                overwrite |= File.Exists(cardBuilder.GetCardPath(document.Identifier));
+                overwrite |= File.Exists(cardBuilder.GetAdditionalCardName(document.Identifier, document));
+                if (document.CopiedAttachmentsFilesInfos != null && document.CopiedAttachmentsFilesInfos.Length > 0)
+                {
+                    for (int attachmentCount = 1;
+                        attachmentCount <= document.CopiedAttachmentsFilesInfos.Length;
+                        attachmentCount++)
+                    {
+                        overwrite |=
+                            File.Exists(
+                                cardBuilder.GetAdditionalCardNameForAttachment($"Вложение{attachmentCount}", document));
+                    }
+                }
 
-                cardBuilder.BuildCard(document.Identifier, document);
+                if (overwriteCard)
+                {
+                    overwriteCard = OverwriteDocumentCards?.Invoke() ?? false;
+                }
+
+                cardBuilder.BuildCard(document.Identifier, document, overwriteCard);
                 if (document.CopiedScanFileInfo != null && document.CopiedScanFileInfo.Exists)
                 {
-                    cardBuilder.BuildAdditionalCard(document.Identifier, document);
+                    cardBuilder.BuildAdditionalCard(document.Identifier, document, overwriteCard);
                 }
 
                 if (document.CopiedAttachmentsFilesInfos != null && document.CopiedAttachmentsFilesInfos.Length > 0)
                 {
                     for (int attachmentCount = 1; attachmentCount <= document.CopiedAttachmentsFilesInfos.Length; attachmentCount++)
                     {
-                        cardBuilder.BuildAdditionalCardForAttachment($"Вложение{attachmentCount}", attachmentCount - 1, document);
+                        cardBuilder.BuildAdditionalCardForAttachment($"Вложение{attachmentCount}", attachmentCount - 1, document, overwriteCard);
                     }
                 }
-
-                if (copyFilesErrorCount > 0)
-                {
-                    DocumentProcessingErrorOccured?.Invoke(document, errorLogBuilder);
-                }
+                DocumentProcessed?.Invoke(document);
             }
-            StatusStringChanged(this, new StatusStringChangedArgs($"Documents processing finished. Errors: {copyFilesErrorCount}"));
+            StatusStringChanged(this, new StatusStringChangedArgs($"Documents processing finished."));
             _State = State.DocumentMoved;
         }
 

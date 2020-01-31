@@ -38,56 +38,88 @@ namespace ExcelReaderConsole
                 outputDirectory.Create();
             }
             outputDirectoryPath = outputDirectory.FullName;
-            
+
         }
 
-        public void BuildCard(string cardName, Document document)
+        public string GetCardPath(string cardName)
+        {
+            return Path.Combine(outputDirectoryPath, $"{cardName}{extension}");
+        }
+        public string GetAdditionalCardName(string cardName, Document document)
+        {
+            return Path.Combine(outputDirectoryPath, FileManager.Instance.GetAttachDirName(document),
+                $"{cardName}{extension}");
+        }
+        public string GetAdditionalCardNameForAttachment(string cardName, Document document)
+        {
+            return Path.Combine(outputDirectoryPath, FileManager.Instance.GetAttachDirName(document),
+                $"{cardName}{extension}");
+        }
+
+        public void BuildCard(string cardName, Document document, bool overwrite = false)
         {
             string path = Path.Combine(outputDirectoryPath, $"{cardName}{extension}");
             FileInfo cardFileInfo = new FileInfo(path);
-            if (!cardFileInfo.Exists)
+            if (cardFileInfo.Exists && overwrite)
             {
-                using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
-                {
-                    foreach(var attribute in document.GetNotNullAttributes())
-                    {
-                        sw.WriteLine($"{attribute.Key} {attribute.Value.Value}");
-                    }
+                cardFileInfo.Delete();
+                
+            }
+            else if (cardFileInfo.Exists && !overwrite)
+            {
+                return;
+            }
 
-                    sw.Close();
+            using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
+            {
+                foreach (var attribute in document.GetNotNullAttributes())
+                {
+                    sw.WriteLine($"{attribute.Key} {attribute.Value.Value}");
                 }
+                sw.Close();
             }
         }
 
-        public void BuildAdditionalCard(string cardName, Document document)
+        public void BuildAdditionalCard(string cardName, Document document, bool overwrite = false)
         {
             string path = Path.Combine(outputDirectoryPath, FileManager.Instance.GetAttachDirName(document),
                 $"{cardName}{extension}");
             FileInfo cardFileInfo = new FileInfo(path);
-            if (!cardFileInfo.Exists)
+            if (cardFileInfo.Exists && overwrite)
             {
-                using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
-                {
-                    sw.WriteLine($"1: {document.ScanFileName}");
-                    sw.WriteLine($"13: {document.CopiedScanFileInfo.Name}");
-                    sw.Close();
-                }
+                cardFileInfo.Delete();
+            }
+            else if (cardFileInfo.Exists && !overwrite)
+            {
+                return;
+            }
+            using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
+            {
+                sw.WriteLine($"1: {document.ScanFileName}");
+                sw.WriteLine($"13: {document.CopiedScanFileInfo.Name}");
+                sw.Close();
             }
         }
 
-        public void BuildAdditionalCardForAttachment(string cardName, int attachmentCount, Document document)
+        public void BuildAdditionalCardForAttachment(string cardName, int attachmentCount, Document document, bool overwrite = false)
         {
             string path = Path.Combine(outputDirectoryPath, FileManager.Instance.GetAttachDirName(document),
                 $"{cardName}{extension}");
             FileInfo cardFileInfo = new FileInfo(path);
-            if (!cardFileInfo.Exists)
+            if (cardFileInfo.Exists && overwrite)
             {
-                using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
-                {
-                    sw.WriteLine($"1: {document.AttachmentsFilesInfos[attachmentCount].Name}");
-                    sw.WriteLine($"13: {document.CopiedAttachmentsFilesInfos[attachmentCount].Name}");
-                    sw.Close();
-                }
+                cardFileInfo.Delete();
+            }
+            else if (cardFileInfo.Exists && !overwrite)
+            {
+                return;
+            }
+
+            using (StreamWriter sw = new StreamWriter(cardFileInfo.OpenWrite(), encoding))
+            {
+                sw.WriteLine($"1: {document.AttachmentsFilesInfos[attachmentCount].Name}");
+                sw.WriteLine($"13: {document.CopiedAttachmentsFilesInfos[attachmentCount].Name}");
+                sw.Close();
             }
         }
     }

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using ExcelReaderConsole.Logger;
 
 namespace ExcelReaderConsole
 {
@@ -12,13 +13,34 @@ namespace ExcelReaderConsole
         public ConsoleApplication()
         {
             documentManager.StatusStringChanged += StatusStringChanged;
-            documentManager.DocumentProcessingErrorOccured += DocumentProcessingErrorOccured;
+            documentManager.DocumentProcessed += DocumentProcessedHandler;
         }
 
-        private void DocumentProcessingErrorOccured(Document document, StringBuilder obj)
+        private void DocumentProcessedHandler(Document document)
         {
-            Console.WriteLine($"{document.Identifier}:");
-            Console.WriteLine(obj.ToString());
+            Console.WriteLine($"Document {document.Identifier} processed.");
+            var messages = documentManager.loggerManager.GetDocumentMessages(document);
+            if (messages != null)
+            {
+                Console.WriteLine("------------------    LOGS    ------------------------");
+                foreach (var message in messages)
+                {
+                    if (message is LogMessage)
+                    {
+                        LogMessage logM = (message as LogMessage);
+                        Console.WriteLine($"[{logM.Time.ToShortTimeString()}] {logM.Message}");
+                    }
+
+                    if (message is ErrorMessage)
+                    {
+                        ErrorMessage logM = (message as ErrorMessage);
+                        Console.WriteLine($"[{logM.Time.ToShortTimeString()}] [Error] {logM.Message}");
+                    }
+                }
+
+                Console.WriteLine("------------------  END LOGS  ------------------------");
+                Console.WriteLine();
+            }
         }
 
         private void StatusStringChanged(object sender, EventArgs e)
