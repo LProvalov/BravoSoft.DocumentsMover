@@ -5,8 +5,74 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
-        Title="{Binding WindowHandler}" Height="450" Width="800">
+        Title="{Binding WindowHandler}" Height="650" Width="1024">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25*"></RowDefinition>
+            <RowDefinition Height="75*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="25*"></ColumnDefinition>
+                <ColumnDefinition Width="25*"></ColumnDefinition>
+                <ColumnDefinition Width="25*"></ColumnDefinition>
+                <ColumnDefinition Width="25*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <GroupBox Grid.Column="0">
+                <GroupBox.Header>Текстовый файл</GroupBox.Header>
+                <ListView x:Name="listViewTextLogs" SelectionMode="Single" ItemsSource="{Binding TextMessages, Mode=OneWay}">
+                    <ListView.View>
+                        <GridView x:Name="gridViewTextLogs">
+                            <GridViewColumn Header="Время" DisplayMemberBinding="{Binding Path=Time}"></GridViewColumn>
+                            <GridViewColumn Header="Сообщение" DisplayMemberBinding="{Binding Path=Message}"></GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+            <GroupBox Grid.Column="1">
+                <GroupBox.Header>Скан файл</GroupBox.Header>
+                <ListView x:Name="listViewScanLogs" SelectionMode="Single" ItemsSource="{Binding ScanMessages, Mode=OneWay}">
+                    <ListView.View>
+                        <GridView x:Name="gridViewScanLogs">
+                            <GridViewColumn Header="Время" DisplayMemberBinding="{Binding Path=Time}"></GridViewColumn>
+                            <GridViewColumn Header="Сообщение" DisplayMemberBinding="{Binding Path=Message}"></GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+            <GroupBox Grid.Column="2">
+                <GroupBox.Header>Текстовый PDF файл</GroupBox.Header>
+                <ListView x:Name="listViewTextPdfLogs" SelectionMode="Single" ItemsSource="{Binding TextPdfMessages, Mode=OneWay}">
+                    <ListView.View>
+                        <GridView x:Name="gridViewTextPdfLogs">
+                            <GridViewColumn Header="Время" DisplayMemberBinding="{Binding Path=Time}"></GridViewColumn>
+                            <GridViewColumn Header="Сообщение" DisplayMemberBinding="{Binding Path=Message}"></GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+            <GroupBox Grid.Column="3">
+                <GroupBox.Header>Дополнительные файлы</GroupBox.Header>
+                <ListView x:Name="listViewAttachmentsLogs" SelectionMode="Single" ItemsSource="{Binding AttachMessages, Mode=OneWay}">
+                    <ListView.View>
+                        <GridView x:Name="gridViewAttachmentsLogs">
+                            <GridViewColumn Header="Время" DisplayMemberBinding="{Binding Path=Time}"></GridViewColumn>
+                            <GridViewColumn Header="Сообщение" DisplayMemberBinding="{Binding Path=Message}"></GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
+        </Grid>
+        <GroupBox Grid.Row="1">
+            <GroupBox.Header>Логи документа</GroupBox.Header>
+            <ListView x:Name="listViewLogs" SelectionMode="Single" ItemsSource="{Binding LogMessages, Mode=OneWay}">
+                <ListView.View>
+                    <GridView x:Name="gridViewLogs">
+                        <GridViewColumn Header="Время" DisplayMemberBinding="{Binding Path=Time}"></GridViewColumn>
+                        <GridViewColumn Header="Сообщение" DisplayMemberBinding="{Binding Path=Message}"></GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </GroupBox>
     </Grid>
 </Window>

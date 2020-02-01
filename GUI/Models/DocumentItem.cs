@@ -8,6 +8,13 @@ namespace GUI.Models
 {
     public class DocumentItem
     {
+        public enum DocumentStatus
+        {
+            Loaded = 0,
+            Processed,
+            WarningOccured,
+            ErrorOccured
+        }
         public DocumentItem(Document document, IEnumerable<DocumentAttribute> attributes)
         {
             Identifier = document.Identifier;
@@ -26,7 +33,7 @@ namespace GUI.Models
                 }
             }
 
-            Warning = false;
+            Status = DocumentStatus.Loaded;
         }
 
         public string Identifier { get; set; }
@@ -51,8 +58,6 @@ namespace GUI.Models
             }
         }
 
-        public bool Warning { get; set; }
-
-        public bool ProcessedSuccessfully { get; set; }
+        public DocumentStatus Status { get; set; }
     }
 }

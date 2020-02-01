@@ -24,6 +24,7 @@ namespace GUI
         {
             InitializeComponent();
             DataContext = model;
+            //listViewLogs.ItemsSource = model.LogMessages;
         }
     }
 }

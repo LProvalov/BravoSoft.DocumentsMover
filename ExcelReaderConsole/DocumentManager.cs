@@ -8,6 +8,13 @@ namespace ExcelReaderConsole
 {
     public class DocumentManager
     {
+        public enum ValidateStatus
+        {
+            Success = 0,
+            Warning = 1,
+            Error = 2
+        }
+
         private static DocumentManager _instance = null;
         public static DocumentManager Instance
         {
@@ -219,6 +226,96 @@ namespace ExcelReaderConsole
             }
             StatusStringChanged(this, new StatusStringChangedArgs($"Documents processing finished."));
             _State = State.DocumentMoved;
+        }
+
+        public int ValidateDocument(Document document)
+        {
+            int returnStatus = 0;
+            if (!string.IsNullOrEmpty(document.TextFileName))
+            {
+                if (!document.TextFileInfo.Exists)
+                {
+                    returnStatus |= (int)ValidateStatus.Error;
+                    loggerManager.Add(new WarningMessage(document, 
+                        $"Текстовый файл {document.TextFileName} не существует во входящей директории.", 
+                        WarningMessage.PlaceType.TextFile));
+                }
+
+                string newFullFilePath = fileManager.MakeNewTextFilePath(document);
+                if (File.Exists(newFullFilePath))
+                {
+                    returnStatus |= (int)ValidateStatus.Warning;
+                    loggerManager.Add(new WarningMessage(document,
+                        $"Файл документа {newFullFilePath} уже существует в исходящей директории.",
+                        WarningMessage.PlaceType.TextFile));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(document.ScanFileName))
+            {
+                if (!document.ScanFileInfo.Exists)
+                {
+                    returnStatus |= (int)ValidateStatus.Error;
+                    loggerManager.Add(new WarningMessage(document,
+                        $"Скан файл {document.ScanFileName} не существует во входящей директории.",
+                        WarningMessage.PlaceType.Scan));
+                }
+
+                string newFullFilePath = fileManager.MakeNewScanFilePath(document);
+                if (File.Exists(newFullFilePath))
+                {
+                    returnStatus |= (int)ValidateStatus.Warning;
+                    loggerManager.Add(new WarningMessage(document,
+                        $"Файл документа {newFullFilePath} уже существует в исходящей директории.",
+                        WarningMessage.PlaceType.Scan));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(document.TextPdfFileName))
+            {
+                if (!document.TextPdfFileInfo.Exists)
+                {
+                    returnStatus |= (int)ValidateStatus.Error;
+                    loggerManager.Add(new WarningMessage(document,
+                        $"Скан файл {document.TextPdfFileName} не существует во входящей директории.",
+                        WarningMessage.PlaceType.TextPdf));
+                }
+
+                string newFullFilePath = fileManager.MakeNewTextPdfPath(document);
+                if (File.Exists(newFullFilePath))
+                {
+                    returnStatus |= (int)ValidateStatus.Warning;
+                    loggerManager.Add(new WarningMessage(document,
+                        $"Файл документа {newFullFilePath} уже существует в исходящей директории.",
+                        WarningMessage.PlaceType.TextPdf));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(document.AttachmentsFilesNames))
+            {
+                try
+                {
+                    foreach (FileInfo attachFileInfo in fileManager.GetAttachmentFileInfos(document))
+                    {
+                        if (!attachFileInfo.Exists)
+                        {
+                            returnStatus |= (int)ValidateStatus.Error;
+                            loggerManager.Add(new WarningMessage(document,
+                                $"Дополнительный файл {attachFileInfo.Name} не существует во входящей директории.",
+                                WarningMessage.PlaceType.Attachments));
+                        }
+                    }
+                }
+                catch
+                {
+                    returnStatus |= (int)ValidateStatus.Error;
+                    loggerManager.Add(new WarningMessage(document,
+                        $"Произошла ошибка при обработке строки {document.AttachmentsFilesNames}",
+                        WarningMessage.PlaceType.Attachments));
+                }
+            }
+            loggerManager.Add(new LogMessage(document, "Валидация файлов документа завершена."));
+            return returnStatus;
         }
 
         public DocumentsStorage DocumentsStorage

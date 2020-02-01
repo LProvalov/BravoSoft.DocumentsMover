@@ -148,12 +148,6 @@ namespace ExcelReaderConsole
                                 {
                                     document.SetAttributeValue(attributeId, new DocumentAttributeValue(value, valueType));
                                     shouldToBeAddedInDocumentStorage = true;
-                                    //DocumentAttributeValue documentValue = new DocumentAttributeValue(value, valueType);
-                                    //if (string.IsNullOrEmpty(documentId))
-                                    //{
-                                    //    documentId = documentStorage.AddDocument(string.Format("{0:D5}", documentCount++));
-                                    //}
-                                    //documentStorage.SetAttributeValue(document.Identifier, attributeId, documentValue);
                                 }
                             }
 

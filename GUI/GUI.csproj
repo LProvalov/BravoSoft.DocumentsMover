@@ -70,6 +70,7 @@
     <Compile Include="Models\AppSettingsViewModel.cs" />
     <Compile Include="Models\DocumentItem.cs" />
     <Compile Include="Models\DocumentWindowModel.cs" />
+    <Compile Include="Models\LogMessageItem.cs" />
     <Compile Include="Models\MainWindowModel.cs" />
     <Compile Include="WpfExtensions.cs" />
     <Page Include="AppSettings.xaml">

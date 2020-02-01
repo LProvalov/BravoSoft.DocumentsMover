@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
+        xmlns:document="clr-namespace:GUI.Models"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="Auto">
 
@@ -47,15 +48,15 @@
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Warning}" Value="True">
+                            <DataTrigger Binding="{Binding Status}" Value="{x:Static document:DocumentItem+DocumentStatus.WarningOccured}">
                                 <Setter Property="Background" Value="LightYellow"></Setter>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding ProcessedSuccessfully}" Value="True">
+                            <DataTrigger Binding="{Binding Status}" Value="{x:Static document:DocumentItem+DocumentStatus.Processed}">
                                 <Setter Property="Background" Value="LightGreen"></Setter>
                             </DataTrigger>
-                            <!--DataTrigger Binding="{Binding ProcessedSuccessfully}" Value="False">
+                            <DataTrigger Binding="{Binding Status}" Value="{x:Static document:DocumentItem+DocumentStatus.ErrorOccured}">
                                 <Setter Property="Background" Value="LightCoral"></Setter>
-                            </DataTrigger-->
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </ListView.ItemContainerStyle>

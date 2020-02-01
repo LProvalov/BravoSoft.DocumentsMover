@@ -82,7 +82,7 @@ namespace ExcelReaderConsole.Models
 
         public IEnumerable<KeyValuePair<string, DocumentAttributeValue>> GetNotNullAttributes()
         {
-            foreach(var value in values)
+            foreach (var value in values)
             {
                 if (value.Value.Value != null)
                 {
@@ -112,7 +112,21 @@ namespace ExcelReaderConsole.Models
         public FileInfo CopiedTextFileInfo { get; set; } = null;
 
         public string ScanFileName { get; set; } = string.Empty;
-        public FileInfo ScanFileInfo { get; set; } = null;
+        private FileInfo _scanFileInfo;
+        public FileInfo ScanFileInfo
+        {
+            get
+            {
+                if (_scanFileInfo == null)
+                {
+                    string scanFileFullPath =
+                        Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), this.ScanFileName);
+                    _scanFileInfo = new FileInfo(scanFileFullPath);
+                }
+                return _scanFileInfo;
+            }
+            set { _scanFileInfo = value; }
+        }
         public FileInfo CopiedScanFileInfo { get; set; } = null;
 
         public string AttachmentsFilesNames { get; set; } = string.Empty;
@@ -120,7 +134,22 @@ namespace ExcelReaderConsole.Models
         public FileInfo[] CopiedAttachmentsFilesInfos { get; set; } = null;
 
         public string TextPdfFileName { get; set; } = string.Empty;
-        public FileInfo TextPdfFileInfo { get; set; } = null;
+        private FileInfo _textPdfFileInfo;
+        public FileInfo TextPdfFileInfo
+        {
+            get
+            {
+                if (_textPdfFileInfo == null)
+                {
+                    string textPdfFileFullPath =
+                        Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), this.TextPdfFileName);
+                    _textPdfFileInfo = new FileInfo(textPdfFileFullPath);
+                }
+                return _textPdfFileInfo;
+            }
+            set { _textPdfFileInfo = value; }
+        } 
+
         public FileInfo CopiedTextPdfFileInfo { get; set; } = null;
     }
 }

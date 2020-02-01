@@ -86,6 +86,7 @@
     <Compile Include="Logger\LoggerManager.cs" />
     <Compile Include="Logger\LogMessage.cs" />
     <Compile Include="Logger\MessageBase.cs" />
+    <Compile Include="Logger\WarningMessage.cs" />
     <Compile Include="Models\Document.cs" />
     <Compile Include="Models\DocumentAttribute.cs" />
     <Compile Include="Models\DocumentAttributeValue.cs" />

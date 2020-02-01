@@ -221,6 +221,17 @@ namespace ExcelReaderConsole
             return false;
         }
 
+        public IEnumerable<FileInfo> GetAttachmentFileInfos(Document document)
+        {
+            string[] attachmentsFilesNames = document.AttachmentsFilesNames.Split(';');
+            List<FileInfo> attachmentFilesInfos = new List<FileInfo>(attachmentsFilesNames.Length);
+            foreach (string fileName in attachmentsFilesNames)
+            {
+                string attachmentFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), fileName.Trim());
+                yield return new FileInfo(attachmentFileFullPath);
+            }
+        }
+
         public bool TryToCopyAttachmentFiles(Document document, out string errorMessage, bool overwrite)
         {
             errorMessage = string.Empty;

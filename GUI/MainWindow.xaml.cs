@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ExcelReaderConsole;
+using ExcelReaderConsole.Logger;
 using ExcelReaderConsole.Models;
 using GUI.Models;
 
@@ -60,7 +61,7 @@ namespace GUI
 
         private bool OverwriteDocumentFiles(Document document)
         {
-            var result = MessageBox.Show($"Часть копируемых файлов документа ({document.Identifier}) уже существуют, перезаписать?", 
+            var result = MessageBox.Show($"Часть копируемых файлов документа ({document.Identifier}) уже существуют, перезаписать?",
                 "Внимание!",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
@@ -134,21 +135,32 @@ namespace GUI
                 return;
             }
             documentManager.ReadDataFromTemplate();
-            RunEllipse.Fill = Brushes.GreenYellow;
-            RunMenuItem.IsEnabled = true;
 
             var attributes = documentManager.DocumentsStorage.GetUsedDocumentAttributes();
             InitColumnToListView(attributes);
-            
+
             var documentItems = new ConcurrentDictionary<string, DocumentItem>();
             foreach (var document in documentManager.DocumentsStorage.GetDocuments())
             {
-                documentItems.AddOrUpdate(document.Identifier, 
-                    (id) => new DocumentItem(document, attributes),
-                    ((s, item) => new DocumentItem(document, attributes)));
+                var newDocumentItem = new DocumentItem(document, attributes);
+                int validateStatus = documentManager.ValidateDocument(document);
+                if (0 != (validateStatus & (int)DocumentManager.ValidateStatus.Warning))
+                {
+                    newDocumentItem.Status = DocumentItem.DocumentStatus.WarningOccured;
+                }
+
+                if (0 != (validateStatus & (int)DocumentManager.ValidateStatus.Error))
+                {
+                    newDocumentItem.Status = DocumentItem.DocumentStatus.ErrorOccured;
+                }
+                documentItems.AddOrUpdate(document.Identifier,
+                    (id) => newDocumentItem,
+                    ((s, item) => newDocumentItem));
             }
 
             model.SetDocuments(documentItems);
+            RunEllipse.Fill = Brushes.GreenYellow;
+            RunMenuItem.IsEnabled = true;
         }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
@@ -188,21 +200,91 @@ namespace GUI
                 e.Cancel = true;
             }
         }
-        
+
         private void listView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            var index = listView.SelectedIndex;
-            var selectedItem = listView.Items[index] as DocumentItem;
-            var document = documentManager.DocumentsStorage.GetDocument(selectedItem.Identifier);
-            
-            // TODO: prepare documentWindowModel and put it to documentWindow constructor
-            DocumentWindowModel dwModel = new DocumentWindowModel();
-            dwModel.WindowHandler = document.Identifier;
-            DocumentWindow documentWindow = new DocumentWindow(dwModel);
+            int index = listView.SelectedIndex;
+            if (listView.Items[index] is DocumentItem selectedItem)
+            {
+                Document document = documentManager.DocumentsStorage.GetDocument(selectedItem.Identifier);
 
-            documentWindow.Left = this.Left + this.Width / 2 - documentWindow.Width / 2;
-            documentWindow.Top = this.Top + this.Height / 2 - documentWindow.Height / 2;
-            documentWindow.ShowDialog();
+                DocumentWindowModel dwModel = new DocumentWindowModel
+                {
+                    WindowHandler = document.Identifier,
+                    LogMessages = documentManager.loggerManager.GetDocumentMessages(document).Where(msg => msg is LogMessage || msg is ErrorMessage).Select(msg =>
+                        {
+                            LogMessageItem.LogStatus ls = LogMessageItem.LogStatus.Normal;
+                            if (msg.Type == MessageBase.MessageType.warning) ls = LogMessageItem.LogStatus.Warning;
+                            else if (msg.Type == MessageBase.MessageType.error) ls = LogMessageItem.LogStatus.Error;
+                            return new LogMessageItem(msg.Message, msg.Time.ToShortTimeString(), ls);
+                        }),
+                    TextMessages = documentManager.loggerManager.GetDocumentMessages(document).Where(msg =>
+                        {
+                            if (msg is WarningMessage)
+                            {
+                                return (msg as WarningMessage).Place == WarningMessage.PlaceType.TextFile;
+                            }
+                            return false;
+                        })
+                        .Select(msg =>
+                        {
+                            LogMessageItem.LogStatus ls = LogMessageItem.LogStatus.Normal;
+                            if (msg.Type == MessageBase.MessageType.warning) ls = LogMessageItem.LogStatus.Warning;
+                            else if (msg.Type == MessageBase.MessageType.error) ls = LogMessageItem.LogStatus.Error;
+                            return new LogMessageItem(msg.Message, msg.Time.ToShortTimeString(), ls);
+                        }),
+                    ScanMessages = documentManager.loggerManager.GetDocumentMessages(document).Where(msg =>
+                        {
+                            if (msg is WarningMessage)
+                            {
+                                return (msg as WarningMessage).Place == WarningMessage.PlaceType.Scan;
+                            }
+                            return false;
+                        })
+                        .Select(msg =>
+                        {
+                            LogMessageItem.LogStatus ls = LogMessageItem.LogStatus.Normal;
+                            if (msg.Type == MessageBase.MessageType.warning) ls = LogMessageItem.LogStatus.Warning;
+                            else if (msg.Type == MessageBase.MessageType.error) ls = LogMessageItem.LogStatus.Error;
+                            return new LogMessageItem(msg.Message, msg.Time.ToShortTimeString(), ls);
+                        }),
+                    TextPdfMessages = documentManager.loggerManager.GetDocumentMessages(document).Where(msg =>
+                        {
+                            if (msg is WarningMessage)
+                            {
+                                return (msg as WarningMessage).Place == WarningMessage.PlaceType.TextPdf;
+                            }
+                            return false;
+                        })
+                        .Select(msg =>
+                        {
+                            LogMessageItem.LogStatus ls = LogMessageItem.LogStatus.Normal;
+                            if (msg.Type == MessageBase.MessageType.warning) ls = LogMessageItem.LogStatus.Warning;
+                            else if (msg.Type == MessageBase.MessageType.error) ls = LogMessageItem.LogStatus.Error;
+                            return new LogMessageItem(msg.Message, msg.Time.ToShortTimeString(), ls);
+                        }),
+                    AttachMessages = documentManager.loggerManager.GetDocumentMessages(document).Where(msg =>
+                        {
+                            if (msg is WarningMessage)
+                            {
+                                return (msg as WarningMessage).Place == WarningMessage.PlaceType.Attachments;
+                            }
+                            return false;
+                        })
+                        .Select(msg =>
+                        {
+                            LogMessageItem.LogStatus ls = LogMessageItem.LogStatus.Normal;
+                            if (msg.Type == MessageBase.MessageType.warning) ls = LogMessageItem.LogStatus.Warning;
+                            else if (msg.Type == MessageBase.MessageType.error) ls = LogMessageItem.LogStatus.Error;
+                            return new LogMessageItem(msg.Message, msg.Time.ToShortTimeString(), ls);
+                        })
+                };
+                DocumentWindow documentWindow = new DocumentWindow(dwModel);
+
+                documentWindow.Left = this.Left + this.Width / 2 - documentWindow.Width / 2;
+                documentWindow.Top = this.Top + this.Height / 2 - documentWindow.Height / 2;
+                documentWindow.ShowDialog();
+            }
         }
     }
 }

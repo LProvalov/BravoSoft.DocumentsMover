@@ -30,6 +30,7 @@ namespace ExcelReaderConsole.Logger
             logs = new Dictionary<string, List<MessageBase>>();
         }
 
+
         public void Add(MessageBase message)
         {
             lock (_lockObject)
