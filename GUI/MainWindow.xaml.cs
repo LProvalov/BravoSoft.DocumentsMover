@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -40,6 +41,19 @@ namespace GUI
             documentManager.OverwriteDocumentFiles += OverwriteDocumentFiles;
             documentManager.OverwriteDocumentCards += OverwriteDocumentCards;
             documentManager.DocumentProcessed += DocumentProcessed;
+            documentManager.OverwriteFile += OverwriteFile;
+        }
+
+        private bool OverwriteFile(string fullFileName)
+        {
+            var result = MessageBox.Show($"{fullFileName} уже существует, перезаписать?",
+                "Внимание!",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                return true;
+            }
+            return false;
         }
 
         private void DocumentProcessed(Document obj)
@@ -74,6 +88,18 @@ namespace GUI
         private void InitColumnToListView(IEnumerable<DocumentAttribute> attributes)
         {
             gridView.Columns.Clear();
+            var factory = new FrameworkElementFactory(typeof(Ellipse));
+            factory.SetValue(Ellipse.FillProperty, new Binding("StatusBrush"));
+            factory.SetValue(Ellipse.WidthProperty, 10.0);
+            factory.SetValue(Ellipse.HeightProperty, 10.0);
+            gridView.Columns.Add(new GridViewColumn()
+            {
+                Header = "Состояние",
+                CellTemplate = new DataTemplate
+                {
+                    VisualTree = factory
+                },
+            });
             gridView.Columns.Add(new GridViewColumn()
             {
                 Header = "Идентификатор",
@@ -153,6 +179,8 @@ namespace GUI
                 {
                     newDocumentItem.Status = DocumentItem.DocumentStatus.ErrorOccured;
                 }
+
+                newDocumentItem.State = DocumentItem.DocumentState.Loaded;
                 documentItems.AddOrUpdate(document.Identifier,
                     (id) => newDocumentItem,
                     ((s, item) => newDocumentItem));
@@ -211,7 +239,8 @@ namespace GUI
                 DocumentWindowModel dwModel = new DocumentWindowModel
                 {
                     WindowHandler = document.Identifier,
-                    LogMessages = documentManager.loggerManager.GetDocumentMessages(document).Where(msg => msg is LogMessage || msg is ErrorMessage).Select(msg =>
+                    LogMessages = documentManager.loggerManager.GetDocumentMessages(document)
+                        .Where(msg => msg is LogMessage || msg is ErrorMessage).Select(msg =>
                         {
                             LogMessageItem.LogStatus ls = LogMessageItem.LogStatus.Normal;
                             if (msg.Type == MessageBase.MessageType.warning) ls = LogMessageItem.LogStatus.Warning;

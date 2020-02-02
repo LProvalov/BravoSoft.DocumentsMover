@@ -36,6 +36,7 @@ namespace ExcelReaderConsole
 
         public Func<Document, bool> OverwriteDocumentFiles = null;
         public Func<bool> OverwriteDocumentCards = null;
+        public Func<string, bool> OverwriteFile = null;
 
         public class StatusStringChangedArgs : EventArgs
         {
@@ -71,6 +72,7 @@ namespace ExcelReaderConsole
             appSettings.LoadAppSettings();
             ds = new DocumentsStorage();
             fileManager = FileManager.Instance;
+            fileManager.FileExistOverwrite = s =>  OverwriteFile?.Invoke(s) ?? false;
             cardBuilder = CardBuilder.Instance;
             loggerManager = LoggerManager.Instance;
             _State = State.InitializationDone;
@@ -133,29 +135,10 @@ namespace ExcelReaderConsole
             foreach (var document in ds.GetDocuments())
             {
                 string errorMessage;
-
-                string newTextFilePath = fileManager.MakeNewTextFilePath(document);
-                string newScanFilePath = fileManager.MakeNewScanFilePath(document);
-                string newTextPdfFilePath = fileManager.MakeNewTextPdfPath(document);
-
-                bool overwrite = false;
-                bool tfp = File.Exists(newTextFilePath);
-                bool sfp = File.Exists(newScanFilePath);
-                bool tpfp = File.Exists(newTextPdfFilePath);
-                bool ato = fileManager.NeedToOverwriteAttachments(document);
-                if ( tfp || sfp || tpfp || ato)
-                {
-                    overwrite = OverwriteDocumentFiles?.Invoke(document) ?? false;
-                    loggerManager.Add(new LogMessage(document, $"TextFile exists: {tfp}"));
-                    loggerManager.Add(new LogMessage(document, $"TextScanFile exists: {sfp}"));
-                    loggerManager.Add(new LogMessage(document, $"TextPdfFile exists: {tpfp}"));
-                    loggerManager.Add(new LogMessage(document, $"Attachments need to overwrite: {ato}"));
-                    loggerManager.Add(new LogMessage(document, $"Существующие файлы будут перезаписаны: {overwrite}"));
-                }
-
                 if (!string.IsNullOrEmpty(document.TextFileName))
                 {
-                    fileManager.TryToCopyTextFile(document, out errorMessage, overwrite);
+                    loggerManager.Add(new LogMessage(document, $"Копирование текстового файла"));
+                    fileManager.TryToCopyTextFile(document, out errorMessage);
                     if (!string.IsNullOrEmpty(errorMessage))
                     {
                         loggerManager.Add(new ErrorMessage(document, errorMessage));
@@ -164,7 +147,8 @@ namespace ExcelReaderConsole
 
                 if (!string.IsNullOrEmpty(document.ScanFileName))
                 {
-                    fileManager.TryToCopyScanFile(document, out errorMessage, overwrite);
+                    loggerManager.Add(new LogMessage(document, $"Копирование скан файла"));
+                    fileManager.TryToCopyScanFile(document, out errorMessage);
                     if (!string.IsNullOrEmpty(errorMessage))
                     {
                         loggerManager.Add(new ErrorMessage(document, errorMessage));
@@ -173,7 +157,8 @@ namespace ExcelReaderConsole
 
                 if (!string.IsNullOrEmpty(document.TextPdfFileName))
                 {
-                    fileManager.TryToCopyTextPdfFile(document, out errorMessage, overwrite);
+                    loggerManager.Add(new LogMessage(document, $"Копирование текстового Pdf файла"));
+                    fileManager.TryToCopyTextPdfFile(document, out errorMessage);
                     if (!string.IsNullOrEmpty(errorMessage))
                     {
                         loggerManager.Add(new ErrorMessage(document, errorMessage));
@@ -182,46 +167,32 @@ namespace ExcelReaderConsole
 
                 if (!string.IsNullOrEmpty(document.AttachmentsFilesNames))
                 {
-                    fileManager.TryToCopyAttachmentFiles(document, out errorMessage, overwrite);
+                    loggerManager.Add(new LogMessage(document, $"Копирование файлов вложений"));
+                    fileManager.TryToCopyAttachmentFiles(document, out errorMessage);
                     if (!string.IsNullOrEmpty(errorMessage))
                     {
                         loggerManager.Add(new ErrorMessage(document, errorMessage));
                     }
                 }
 
-                bool overwriteCard = false;
-                overwrite |= File.Exists(cardBuilder.GetCardPath(document.Identifier));
-                overwrite |= File.Exists(cardBuilder.GetAdditionalCardName(document.Identifier, document));
-                if (document.CopiedAttachmentsFilesInfos != null && document.CopiedAttachmentsFilesInfos.Length > 0)
-                {
-                    for (int attachmentCount = 1;
-                        attachmentCount <= document.CopiedAttachmentsFilesInfos.Length;
-                        attachmentCount++)
-                    {
-                        overwrite |=
-                            File.Exists(
-                                cardBuilder.GetAdditionalCardNameForAttachment($"Вложение{attachmentCount}", document));
-                    }
-                }
-
-                if (overwriteCard)
-                {
-                    overwriteCard = OverwriteDocumentCards?.Invoke() ?? false;
-                }
-
-                cardBuilder.BuildCard(document.Identifier, document, overwriteCard);
+                loggerManager.Add(new LogMessage(document, $"Создание карточки документа"));
+                cardBuilder.BuildCard(document.Identifier, document);
                 if (document.CopiedScanFileInfo != null && document.CopiedScanFileInfo.Exists)
                 {
-                    cardBuilder.BuildAdditionalCard(document.Identifier, document, overwriteCard);
+                    loggerManager.Add(new LogMessage(document, $"Создание дополнительной карточки документа"));
+                    cardBuilder.BuildAdditionalCard(document.Identifier, document);
                 }
 
                 if (document.CopiedAttachmentsFilesInfos != null && document.CopiedAttachmentsFilesInfos.Length > 0)
                 {
+                    loggerManager.Add(new LogMessage(document, $"Создание карточек вложений"));
                     for (int attachmentCount = 1; attachmentCount <= document.CopiedAttachmentsFilesInfos.Length; attachmentCount++)
                     {
-                        cardBuilder.BuildAdditionalCardForAttachment($"Вложение{attachmentCount}", attachmentCount - 1, document, overwriteCard);
+                        loggerManager.Add(new LogMessage(document, $"Вложение{attachmentCount}"));
+                        cardBuilder.BuildAdditionalCardForAttachment($"Вложение{attachmentCount}", attachmentCount - 1, document);
                     }
                 }
+                loggerManager.Add(new LogMessage(document, $"Обработка документа завершена"));
                 DocumentProcessed?.Invoke(document);
             }
             StatusStringChanged(this, new StatusStringChangedArgs($"Documents processing finished."));

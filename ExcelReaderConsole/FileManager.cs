@@ -2,13 +2,17 @@
 using System.IO;
 using System.Collections.Generic;
 
-using ExcelReaderConsole.Models;
+using Microsoft.Office.Interop;
 using ExcelReaderConsole.StatusReport;
+using Word = Microsoft.Office.Interop.Word;
+using Interop = Microsoft.Office.Interop;
+using Document = ExcelReaderConsole.Models.Document;
 
 namespace ExcelReaderConsole
 {
     public class FileManager
     {
+        public Func<string, bool> FileExistOverwrite;
         private static FileManager instance;
         private FileManager()
         {
@@ -87,6 +91,15 @@ namespace ExcelReaderConsole
                 $"{document.Identifier}_7845{document.TextFileInfo.Extension}") :
                 string.Empty;
         }
+
+        public string MakeNewMhtTextFilePath(Document document)
+        {
+            return document.TextFileInfo != null
+                ? Path.Combine(appSettings.GetOutputDirectoryPath(),
+                    GetTextDirName(document),
+                    $"{document.Identifier}_7778.mht")
+                : string.Empty;
+        }
         public string MakeNewScanFilePath(Document document)
         {
             return document.ScanFileInfo != null ? 
@@ -129,7 +142,7 @@ namespace ExcelReaderConsole
             return false;
         }
 
-        public bool TryToCopyTextFile(Document document, out string errorMessage, bool overwrite)
+        public bool TryToCopyTextFile(Document document, out string errorMessage)
         {
             errorMessage = string.Empty;
             DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
@@ -138,13 +151,34 @@ namespace ExcelReaderConsole
                 if (document.TextFileInfo.Exists)
                 {
                     string newFilePath = MakeNewTextFilePath(document);
-                    File.Copy(document.TextFileInfo.FullName, newFilePath, overwrite);
                     FileInfo newFileInfo = new FileInfo(newFilePath);
                     if (newFileInfo.Exists)
                     {
-                        document.CopiedTextFileInfo = newFileInfo;
-                        return true;
+                        bool overwrite = FileExistOverwrite?.Invoke(newFileInfo.FullName) ?? false;
+                        if (overwrite)
+                        {
+                            newFileInfo.Delete();
+                            File.Copy(document.TextFileInfo.FullName, newFilePath);
+                        }
                     }
+                    else
+                    {
+                        File.Copy(document.TextFileInfo.FullName, newFilePath);
+                    }
+
+                    newFileInfo.Refresh();
+                    if (newFileInfo.Exists)
+                    {
+                        document.CopiedTextFileInfo = newFileInfo;
+                    }
+
+                    if (document.TextFileInfo.Extension.Equals(".doc"))
+                    {
+                        string newMhtFilePath = MakeNewMhtTextFilePath(document);
+                        FileInfo mhtFileInfo = new FileInfo(newMhtFilePath);
+                        ConvertDocToMht(document.TextFileInfo, mhtFileInfo);
+                    }
+                    return true;
                 }
                 else
                 {
@@ -158,7 +192,7 @@ namespace ExcelReaderConsole
             return false;
         }
 
-        public bool TryToCopyScanFile(Document document, out string errorMessage, bool overwrite)
+        public bool TryToCopyScanFile(Document document, out string errorMessage)
         {
             errorMessage = string.Empty;
             DirectoryInfo documentAdditionalDirectory = CreateDirectoriesForAdditionalFiles(document);
@@ -169,8 +203,22 @@ namespace ExcelReaderConsole
                 if (document.ScanFileInfo.Exists)
                 {
                     string newFilePath = MakeNewScanFilePath(document);
-                    File.Copy(document.ScanFileInfo.FullName, newFilePath, overwrite);
                     FileInfo newFileInfo = new FileInfo(newFilePath);
+                    if (newFileInfo.Exists)
+                    {
+                        bool overwrite = FileExistOverwrite?.Invoke(newFileInfo.FullName) ?? false;
+                        if (overwrite)
+                        {
+                            newFileInfo.Delete();
+                            File.Copy(document.ScanFileInfo.FullName, newFilePath);
+                        }
+                    }
+                    else
+                    {
+                        File.Copy(document.ScanFileInfo.FullName, newFilePath);
+                    }
+
+                    newFileInfo.Refresh();
                     if (newFileInfo.Exists)
                     {
                         document.CopiedScanFileInfo = newFileInfo;
@@ -190,7 +238,7 @@ namespace ExcelReaderConsole
             return false;
         }
 
-        public bool TryToCopyTextPdfFile(Document document, out string errorMessage, bool overwrite)
+        public bool TryToCopyTextPdfFile(Document document, out string errorMessage)
         {
             errorMessage = string.Empty;
             DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
@@ -201,8 +249,22 @@ namespace ExcelReaderConsole
                 if (document.TextPdfFileInfo.Exists)
                 {
                     string newFilePath = MakeNewTextPdfPath(document);
-                    File.Copy(document.TextPdfFileInfo.FullName, newFilePath, overwrite);
                     FileInfo newPdfFileInfo = new FileInfo(newFilePath);
+                    if (newPdfFileInfo.Exists)
+                    {
+                        bool overwrite = FileExistOverwrite?.Invoke(newPdfFileInfo.FullName) ?? false;
+                        if (overwrite)
+                        {
+                            newPdfFileInfo.Delete();
+                            File.Copy(document.TextPdfFileInfo.FullName, newFilePath);
+                        }
+                    }
+                    else
+                    {
+                        File.Copy(document.TextPdfFileInfo.FullName, newFilePath);
+                    }
+
+                    newPdfFileInfo.Refresh();
                     if (newPdfFileInfo.Exists)
                     {
                         document.CopiedTextPdfFileInfo = newPdfFileInfo;
@@ -232,7 +294,7 @@ namespace ExcelReaderConsole
             }
         }
 
-        public bool TryToCopyAttachmentFiles(Document document, out string errorMessage, bool overwrite)
+        public bool TryToCopyAttachmentFiles(Document document, out string errorMessage)
         {
             errorMessage = string.Empty;
 
@@ -254,8 +316,22 @@ namespace ExcelReaderConsole
                         string newAttachmentFileName = Path.Combine(appSettings.GetOutputDirectoryPath(),
                                 GetAttachDirName(document),
                                 $"Вложение{attachmentCount}{attachmentFileInfo.Extension}");
-                        File.Copy(attachmentFileInfo.FullName, newAttachmentFileName, overwrite);
                         FileInfo newAttachmentFileInfo = new FileInfo(newAttachmentFileName);
+                        if (newAttachmentFileInfo.Exists)
+                        {
+                            bool overwrite = FileExistOverwrite?.Invoke(newAttachmentFileInfo.FullName) ?? false;
+                            if (overwrite)
+                            {
+                                newAttachmentFileInfo.Delete();
+                                File.Copy(attachmentFileInfo.FullName, newAttachmentFileName);
+                            }
+                        }
+                        else
+                        {
+                            File.Copy(attachmentFileInfo.FullName, newAttachmentFileName);
+                        }
+
+                        newAttachmentFileInfo.Refresh();
                         if (newAttachmentFileInfo.Exists)
                         {
                             copiedAttachments.Add(newAttachmentFileInfo);
@@ -274,6 +350,32 @@ namespace ExcelReaderConsole
                 errorMessage = "Attachments files is null or empty. They can't be copied.";
             }
             return false;
+        }
+
+        public void ConvertDocToMht(FileInfo docFileInfo, FileInfo mhtFileDestination)
+        {
+            if (docFileInfo.Exists)
+            {
+                if (mhtFileDestination.Exists)
+                {
+                    bool overwrite = FileExistOverwrite?.Invoke(mhtFileDestination.FullName) ?? false;
+                    if (overwrite)
+                    {
+                        mhtFileDestination.Delete();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
+                Word.Application oWord = new Word.Application();
+                oWord.Visible = false;
+                Word.Document oDocument = oWord.Documents.Add(docFileInfo.FullName);
+                oDocument.SaveAs(mhtFileDestination.FullName, Word.WdSaveFormat.wdFormatWebArchive);
+                oDocument.Close();
+                oWord.Quit();
+            }
         }
     }
 }

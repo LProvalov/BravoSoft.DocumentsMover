@@ -10,7 +10,7 @@ namespace ExcelReaderConsole.Logger
     {
         public ErrorMessage(Document document, string message) : base(document, message)
         {
-            Type = MessageType.log;
+            Type = MessageType.error;
         }
     }
 }

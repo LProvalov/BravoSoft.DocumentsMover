@@ -42,17 +42,13 @@
             <ListView x:Name="listView" Grid.Row="0" ItemsSource="{Binding Documents, Mode=OneWay}" 
                       MouseDoubleClick="listView_MouseDoubleClick">
                 <ListView.View>
-                    <GridView x:Name="gridView">
-                    </GridView>
+                    <GridView x:Name="gridView"></GridView>
                 </ListView.View>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Status}" Value="{x:Static document:DocumentItem+DocumentStatus.WarningOccured}">
                                 <Setter Property="Background" Value="LightYellow"></Setter>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="{x:Static document:DocumentItem+DocumentStatus.Processed}">
-                                <Setter Property="Background" Value="LightGreen"></Setter>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Status}" Value="{x:Static document:DocumentItem+DocumentStatus.ErrorOccured}">
                                 <Setter Property="Background" Value="LightCoral"></Setter>

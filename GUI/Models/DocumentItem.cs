@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Media;
 using ExcelReaderConsole.Models;
 
 namespace GUI.Models
@@ -10,10 +11,15 @@ namespace GUI.Models
     {
         public enum DocumentStatus
         {
-            Loaded = 0,
-            Processed,
+            Normal,
             WarningOccured,
             ErrorOccured
+        }
+
+        public enum DocumentState
+        {
+            Loaded = 0,
+            Processed,
         }
         public DocumentItem(Document document, IEnumerable<DocumentAttribute> attributes)
         {
@@ -33,7 +39,7 @@ namespace GUI.Models
                 }
             }
 
-            Status = DocumentStatus.Loaded;
+            Status = DocumentStatus.Normal;
         }
 
         public string Identifier { get; set; }
@@ -59,5 +65,18 @@ namespace GUI.Models
         }
 
         public DocumentStatus Status { get; set; }
+        public DocumentState State { get; set; }
+
+        public SolidColorBrush StatusBrush
+        {
+            get
+            {
+                if (State == DocumentState.Processed)
+                {
+                    return new SolidColorBrush(Colors.LightGreen);
+                }
+                return new SolidColorBrush(Colors.LightGray);
+            }
+        }
     }
 }

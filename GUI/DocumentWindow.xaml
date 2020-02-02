@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
+        xmlns:log="clr-namespace:GUI.Models"
         mc:Ignorable="d"
         Title="{Binding WindowHandler}" Height="650" Width="1024">
     <Grid>
@@ -72,6 +73,18 @@
                         <GridViewColumn Header="Сообщение" DisplayMemberBinding="{Binding Path=Message}"></GridViewColumn>
                     </GridView>
                 </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="{x:Static log:LogMessageItem+LogStatus.Warning}">
+                                <Setter Property="Background" Value="LightYellow"></Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="{x:Static log:LogMessageItem+LogStatus.Error}">
+                                <Setter Property="Background" Value="LightCoral"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
             </ListView>
         </GroupBox>
     </Grid>

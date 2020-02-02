@@ -33,7 +33,7 @@ namespace GUI.Models
         {
             if (documents.ContainsKey(documentId))
             {
-                documents[documentId].Status = DocumentItem.DocumentStatus.Processed;
+                documents[documentId].State = DocumentItem.DocumentState.Processed;
                 OnPropertyChanged("Documents");
             }
         }
