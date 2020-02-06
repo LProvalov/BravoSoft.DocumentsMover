@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -15,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using ExcelReaderConsole;
 using ExcelReaderConsole.Logger;
 using ExcelReaderConsole.Models;
@@ -30,6 +33,8 @@ namespace GUI
         private readonly DocumentManager documentManager;
 
         public readonly MainWindowModel model;
+
+        private delegate void NoArgDelegate();
 
         public MainWindow()
         {
@@ -87,52 +92,55 @@ namespace GUI
 
         private void InitColumnToListView(IEnumerable<DocumentAttribute> attributes)
         {
-            gridView.Columns.Clear();
-            var factory = new FrameworkElementFactory(typeof(Ellipse));
-            factory.SetValue(Ellipse.FillProperty, new Binding("StatusBrush"));
-            factory.SetValue(Ellipse.WidthProperty, 10.0);
-            factory.SetValue(Ellipse.HeightProperty, 10.0);
-            gridView.Columns.Add(new GridViewColumn()
+            gridView.Dispatcher?.BeginInvoke(new NoArgDelegate(() =>
             {
-                Header = "Состояние",
-                CellTemplate = new DataTemplate
-                {
-                    VisualTree = factory
-                },
-            });
-            gridView.Columns.Add(new GridViewColumn()
-            {
-                Header = "Идентификатор",
-                DisplayMemberBinding = new Binding($"Identifier")
-            });
-            gridView.Columns.Add(new GridViewColumn()
-            {
-                Header = "Текстовый файл",
-                DisplayMemberBinding = new Binding($"TextFileName")
-            });
-            gridView.Columns.Add(new GridViewColumn()
-            {
-                Header = "Загрузить как скан копию",
-                DisplayMemberBinding = new Binding($"ScanFileName")
-            });
-            gridView.Columns.Add(new GridViewColumn()
-            {
-                Header = "Текстовый PDF",
-                DisplayMemberBinding = new Binding($"TextPdfFileName")
-            });
-            gridView.Columns.Add(new GridViewColumn()
-            {
-                Header = "Вложения",
-                DisplayMemberBinding = new Binding($"AttachmentsFilesNames")
-            });
-            foreach (var attribute in attributes)
-            {
+                gridView.Columns.Clear();
+                var factory = new FrameworkElementFactory(typeof(Ellipse));
+                factory.SetValue(Ellipse.FillProperty, new Binding("StatusBrush"));
+                factory.SetValue(Ellipse.WidthProperty, 10.0);
+                factory.SetValue(Ellipse.HeightProperty, 10.0);
                 gridView.Columns.Add(new GridViewColumn()
                 {
-                    Header = attribute.Name,
-                    DisplayMemberBinding = new Binding($"[{attribute.Identifier}]")
+                    Header = "Состояние",
+                    CellTemplate = new DataTemplate
+                    {
+                        VisualTree = factory
+                    },
                 });
-            }
+                gridView.Columns.Add(new GridViewColumn()
+                {
+                    Header = "Идентификатор",
+                    DisplayMemberBinding = new Binding($"Identifier")
+                });
+                gridView.Columns.Add(new GridViewColumn()
+                {
+                    Header = "Текстовый файл",
+                    DisplayMemberBinding = new Binding($"TextFileName")
+                });
+                gridView.Columns.Add(new GridViewColumn()
+                {
+                    Header = "Загрузить как скан копию",
+                    DisplayMemberBinding = new Binding($"ScanFileName")
+                });
+                gridView.Columns.Add(new GridViewColumn()
+                {
+                    Header = "Текстовый PDF",
+                    DisplayMemberBinding = new Binding($"TextPdfFileName")
+                });
+                gridView.Columns.Add(new GridViewColumn()
+                {
+                    Header = "Вложения",
+                    DisplayMemberBinding = new Binding($"AttachmentsFilesNames")
+                });
+                foreach (var attribute in attributes)
+                {
+                    gridView.Columns.Add(new GridViewColumn()
+                    {
+                        Header = attribute.Name,
+                        DisplayMemberBinding = new Binding($"[{attribute.Identifier}]")
+                    });
+                }
+            }), DispatcherPriority.Input);
         }
 
         private string selectExcelTemplateFile()
@@ -160,35 +168,46 @@ namespace GUI
             {
                 return;
             }
-            documentManager.ReadDataFromTemplate();
 
-            var attributes = documentManager.DocumentsStorage.GetUsedDocumentAttributes();
-            InitColumnToListView(attributes);
+            RunEllipse.Fill = Brushes.LightCoral;
+            RunMenuItem.IsEnabled = false;
+            textBoxListViewLable.Text = "Loading pattern...";
+            textBoxListViewLable.Visibility = Visibility.Visible;
 
-            var documentItems = new ConcurrentDictionary<string, DocumentItem>();
-            foreach (var document in documentManager.DocumentsStorage.GetDocuments())
+            documentManager.ReadDataFromTemplateAsync().ContinueWith((task) =>
             {
-                var newDocumentItem = new DocumentItem(document, attributes);
-                int validateStatus = documentManager.ValidateDocument(document);
-                if (0 != (validateStatus & (int)DocumentManager.ValidateStatus.Warning))
+                var attributes = documentManager.DocumentsStorage.GetUsedDocumentAttributes();
+                InitColumnToListView(attributes);
+
+                var documentItems = new ConcurrentDictionary<string, DocumentItem>();
+                foreach (var document in documentManager.DocumentsStorage.GetDocuments())
                 {
-                    newDocumentItem.Status = DocumentItem.DocumentStatus.WarningOccured;
-                }
+                    var newDocumentItem = new DocumentItem(document, attributes);
+                    int validateStatus = documentManager.ValidateDocument(document);
+                    if (0 != (validateStatus & (int) DocumentManager.ValidateStatus.Warning))
+                    {
+                        newDocumentItem.Status = DocumentItem.DocumentStatus.WarningOccured;
+                    }
 
-                if (0 != (validateStatus & (int)DocumentManager.ValidateStatus.Error))
+                    if (0 != (validateStatus & (int) DocumentManager.ValidateStatus.Error))
+                    {
+                        newDocumentItem.Status = DocumentItem.DocumentStatus.ErrorOccured;
+                    }
+
+                    newDocumentItem.State = DocumentItem.DocumentState.Loaded;
+                    documentItems.AddOrUpdate(document.Identifier,
+                                              (id) => newDocumentItem,
+                                              ((s, item) => newDocumentItem));
+                }
+                gridView.Dispatcher?.BeginInvoke(new NoArgDelegate(() =>
                 {
-                    newDocumentItem.Status = DocumentItem.DocumentStatus.ErrorOccured;
-                }
-
-                newDocumentItem.State = DocumentItem.DocumentState.Loaded;
-                documentItems.AddOrUpdate(document.Identifier,
-                    (id) => newDocumentItem,
-                    ((s, item) => newDocumentItem));
-            }
-
-            model.SetDocuments(documentItems);
-            RunEllipse.Fill = Brushes.GreenYellow;
-            RunMenuItem.IsEnabled = true;
+                    textBoxListViewLable.Visibility = Visibility.Hidden;
+                    model.SetDocuments(documentItems);
+                    RunEllipse.Fill = Brushes.GreenYellow;
+                    RunMenuItem.IsEnabled = true;
+                }), DispatcherPriority.Input);
+                
+            });
         }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
@@ -206,8 +225,21 @@ namespace GUI
 
         private void MenuItemRun_OnClick(object sender, RoutedEventArgs e)
         {
-            documentManager.ProcessDocuments();
-            MessageBox.Show("Document processing is done.", "Processing result", MessageBoxButton.OK);
+            menuItemLoadTemplate.IsEnabled = false;
+            RunEllipse.Fill = Brushes.Yellow;
+            RunMenuItem.IsEnabled = false;
+
+            documentManager.ProcessDocumentsAsync().ContinueWith((task =>
+            {
+                MessageBox.Show("Document processing is done.", "Processing result",
+                                MessageBoxButton.OK);
+                gridView.Dispatcher?.BeginInvoke(new NoArgDelegate(() =>
+                {
+                    RunEllipse.Fill = Brushes.LightGreen;
+                    RunMenuItem.IsEnabled = true;
+                    menuItemLoadTemplate.IsEnabled = true;
+                }), DispatcherPriority.Input);
+            }));
         }
 
         private void DocumentManagerStatusChangedHandler(DocumentManager.State oldState,

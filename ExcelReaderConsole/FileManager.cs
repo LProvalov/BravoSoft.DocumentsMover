@@ -172,7 +172,9 @@ namespace ExcelReaderConsole
                         document.CopiedTextFileInfo = newFileInfo;
                     }
 
-                    if (document.TextFileInfo.Extension.Equals(".doc"))
+                    if (document.TextFileInfo.Extension.Equals(".doc") ||
+                        document.TextFileInfo.Extension.Equals(".docx") ||
+                        document.TextFileInfo.Extension.Equals(".rtf"))
                     {
                         string newMhtFilePath = MakeNewMhtTextFilePath(document);
                         FileInfo mhtFileInfo = new FileInfo(newMhtFilePath);

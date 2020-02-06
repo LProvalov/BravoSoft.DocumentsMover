@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Media;
 using ExcelReaderConsole.Models;
 
 namespace GUI.Models
 {
-    public class DocumentItem
+    public class DocumentItem : INotifyPropertyChanged
     {
         public enum DocumentStatus
         {
@@ -65,7 +63,22 @@ namespace GUI.Models
         }
 
         public DocumentStatus Status { get; set; }
-        public DocumentState State { get; set; }
+        private DocumentState state;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public DocumentState State {
+            get { return state; }
+            set
+            {
+                state = value; 
+                OnPropertyChanged("StatusBrush");
+            }
+        }
 
         public SolidColorBrush StatusBrush
         {

@@ -1,7 +1,5 @@
 ﻿using ExcelReaderConsole.Models;
 using System;
-using System.IO;
-using System.Text;
 using ExcelReaderConsole.Logger;
 
 namespace ExcelReaderConsole
@@ -52,7 +50,7 @@ namespace ExcelReaderConsole
         public void Run()
         {
             documentManager.ReadDataFromTemplate();
-            documentManager.ProcessDocuments();
+            documentManager.ProcessDocumentsAsync().Wait();
         }
     }
 }

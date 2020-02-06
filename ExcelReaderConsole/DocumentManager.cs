@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using ExcelReaderConsole.Logger;
 using ExcelReaderConsole.Models;
 
@@ -63,16 +65,16 @@ namespace ExcelReaderConsole
         private readonly FileManager fileManager;
         private readonly CardBuilder cardBuilder;
         public readonly Logger.LoggerManager loggerManager;
-        
+
         private DocumentManager()
         {
-            StatusChanged = (states, states1) => {};
-            StatusStringChanged = (sender, args) => {};
+            StatusChanged = (states, states1) => { };
+            StatusStringChanged = (sender, args) => { };
             appSettings = AppSettings.Instance;
             appSettings.LoadAppSettings();
             ds = new DocumentsStorage();
             fileManager = FileManager.Instance;
-            fileManager.FileExistOverwrite = s =>  OverwriteFile?.Invoke(s) ?? false;
+            fileManager.FileExistOverwrite = s => OverwriteFile?.Invoke(s) ?? false;
             cardBuilder = CardBuilder.Instance;
             loggerManager = LoggerManager.Instance;
             _State = State.InitializationDone;
@@ -113,7 +115,14 @@ namespace ExcelReaderConsole
             _State = State.TemplateLoaded;
         }
 
-        public void ProcessDocuments()
+        public Task ReadDataFromTemplateAsync()
+        {
+            return Task.Factory.StartNew(action: () =>
+            {
+                ReadDataFromTemplate();
+            });
+        }
+        private void ProcessDocuments()
         {
             if (_State != State.TemplateLoaded)
             {
@@ -199,6 +208,14 @@ namespace ExcelReaderConsole
             _State = State.DocumentMoved;
         }
 
+        public Task ProcessDocumentsAsync()
+        {
+            return Task.Factory.StartNew(action: () =>
+            {
+                ProcessDocuments();
+            });
+        }
+
         public int ValidateDocument(Document document)
         {
             int returnStatus = 0;
@@ -207,8 +224,8 @@ namespace ExcelReaderConsole
                 if (!document.TextFileInfo.Exists)
                 {
                     returnStatus |= (int)ValidateStatus.Error;
-                    loggerManager.Add(new WarningMessage(document, 
-                        $"Текстовый файл {document.TextFileName} не существует во входящей директории.", 
+                    loggerManager.Add(new WarningMessage(document,
+                        $"Текстовый файл {document.TextFileName} не существует во входящей директории.",
                         WarningMessage.PlaceType.TextFile));
                 }
 

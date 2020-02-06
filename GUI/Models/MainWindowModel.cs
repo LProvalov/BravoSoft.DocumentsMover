@@ -34,7 +34,6 @@ namespace GUI.Models
             if (documents.ContainsKey(documentId))
             {
                 documents[documentId].State = DocumentItem.DocumentState.Processed;
-                OnPropertyChanged("Documents");
             }
         }
        
