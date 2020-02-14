@@ -46,7 +46,7 @@ namespace ExcelReaderConsole
             if (document is DocumentEdition)
             {
                 DocumentEdition documentEdition = document as DocumentEdition;
-                return Path.Combine($"{documentEdition.MainEditionIdentifier}_edition",
+                return Path.Combine($"{documentEdition.MainEditionIdentifier}_editions",
                              $"{documentEdition.Identifier}_attach");
             }
             return $"{document.Identifier}_attach";
@@ -57,7 +57,7 @@ namespace ExcelReaderConsole
             if (document is DocumentEdition)
             {
                 DocumentEdition documentEdition = document as DocumentEdition;
-                return Path.Combine($"{documentEdition.MainEditionIdentifier}_edition",
+                return Path.Combine($"{documentEdition.MainEditionIdentifier}_editions",
                                     $"{documentEdition.Identifier}_text");
             }
             return $"{document.Identifier}_text";

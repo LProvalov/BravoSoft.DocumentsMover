@@ -32,11 +32,17 @@ namespace GUI
         private readonly DocumentManager documentManager;
         public readonly MainWindowModel model;
         private delegate void NoArgDelegate();
+        private Dictionary<string, ImageSource> runIconsList = new Dictionary<string, ImageSource>();
 
         public MainWindow()
         {
             InitializeComponent();
+            runIconsList.Add("start", new BitmapImage(new Uri("pack://application:,,,/Icons/start.png")));
+            runIconsList.Add("stop", new BitmapImage(new Uri("pack://application:,,,/Icons/stop.png")));
+            runIconsList.Add("stop_yellow", new BitmapImage(new Uri("pack://application:,,,/Icons/stop_yellow.png")));
+
             model = new MainWindowModel();
+            model.SetImageRunSource(runIconsList["stop"]);
             DataContext = model;
             documentManager = DocumentManager.Instance;
             documentManager.StatusChanged += DocumentManagerStatusChangedHandler;
@@ -45,6 +51,8 @@ namespace GUI
             documentManager.DocumentProcessed += DocumentProcessed;
             documentManager.OverwriteFile += OverwriteFile;
             documentManager.ExceptionOccured += DocumentManagerExceptionOccured;
+
+            
         }
 
         private void DocumentManagerExceptionOccured(Exception ex)
@@ -178,7 +186,7 @@ namespace GUI
                 return;
             }
 
-            RunEllipse.Fill = Brushes.LightCoral;
+            model.SetImageRunSource(runIconsList["stop"]);
             RunMenuItem.IsEnabled = false;
             textBoxListViewLable.Text = "Loading pattern...";
             textBoxListViewLable.Visibility = Visibility.Visible;
@@ -213,7 +221,7 @@ namespace GUI
                 {
                     textBoxListViewLable.Visibility = Visibility.Hidden;
                     model.SetDocuments(documentItems);
-                    RunEllipse.Fill = Brushes.GreenYellow;
+                    model.SetImageRunSource(runIconsList["start"]);
                     RunMenuItem.IsEnabled = true;
                     var view = (CollectionView)CollectionViewSource.GetDefaultView(listView.ItemsSource);
                     view.SortDescriptions.Add(new SortDescription("Identifier", ListSortDirection.Ascending));
@@ -248,7 +256,7 @@ namespace GUI
         private void MenuItemRun_OnClick(object sender, RoutedEventArgs e)
         {
             menuItemLoadTemplate.IsEnabled = false;
-            RunEllipse.Fill = Brushes.Yellow;
+            model.SetImageRunSource(runIconsList["stop_yellow"]);
             RunMenuItem.IsEnabled = false;
 
             model.StatusMessage = $"{documentManager.ProcentProcessed:P} completed";
@@ -258,8 +266,8 @@ namespace GUI
                                 MessageBoxButton.OK);
                 gridView.Dispatcher?.BeginInvoke(new NoArgDelegate(() =>
                 {
-                    RunEllipse.Fill = Brushes.LightGreen;
-                    RunMenuItem.IsEnabled = true;
+                    model.SetImageRunSource(runIconsList["stop"]);
+                    RunMenuItem.IsEnabled = false;
                     menuItemLoadTemplate.IsEnabled = true;
                 }), DispatcherPriority.Input);
             }));

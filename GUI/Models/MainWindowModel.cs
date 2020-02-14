@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace GUI.Models
 {
@@ -39,6 +42,18 @@ namespace GUI.Models
             {
                 statusMessage = value;
                 OnPropertyChanged("StatusMessage");
+            }
+        }
+
+        private ImageSource imageRunSource = null;
+        public ImageSource ImageRunSource { get { return imageRunSource; } }
+
+        public void SetImageRunSource(ImageSource imageSource)
+        {
+            if (imageSource != null)
+            {
+                imageRunSource = imageSource;
+                OnPropertyChanged("ImageRunSource");
             }
         }
     }
