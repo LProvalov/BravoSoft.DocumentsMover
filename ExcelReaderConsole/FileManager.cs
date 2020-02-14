@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-
+using ExcelReaderConsole.Models;
 using Microsoft.Office.Interop;
 using ExcelReaderConsole.StatusReport;
 using Word = Microsoft.Office.Interop.Word;
@@ -43,11 +43,23 @@ namespace ExcelReaderConsole
 
         public string GetAttachDirName(Document document)
         {
+            if (document is DocumentEdition)
+            {
+                DocumentEdition documentEdition = document as DocumentEdition;
+                return Path.Combine($"{documentEdition.MainEditionIdentifier}_edition",
+                             $"{documentEdition.Identifier}_attach");
+            }
             return $"{document.Identifier}_attach";
         }
 
         public string GetTextDirName(Document document)
         {
+            if (document is DocumentEdition)
+            {
+                DocumentEdition documentEdition = document as DocumentEdition;
+                return Path.Combine($"{documentEdition.MainEditionIdentifier}_edition",
+                                    $"{documentEdition.Identifier}_text");
+            }
             return $"{document.Identifier}_text";
         }
 

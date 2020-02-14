@@ -9,9 +9,10 @@ namespace ExcelReaderConsole
     public class ExcelReader
     {
         private const int HeaderCount = 3;
-
         private FileInfo excelFileInfo;
-        private bool isDataRead = false;
+
+        public Action<Exception> ExceptionOccured = null;
+
         public ExcelReader(string filePath)
         {
             if (String.IsNullOrEmpty(filePath))
@@ -91,72 +92,91 @@ namespace ExcelReaderConsole
                 };
                 using (var reader = ExcelReaderFactory.CreateOpenXmlReader(stream, configuration))
                 {
-                    do
+                    try
                     {
-                        int rowCount = reader.RowCount;
-                        int workingRow = 0;
-
-                        // + Work with header + 
-                        int attributePositionStart = 5;
-                        int fieldCount = reader.FieldCount - attributePositionStart;                        
-                        documentStorage.Init(fieldCount);
-
-                        reader.Read();
-                        for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
+                        do
                         {
-                            documentStorage.SetAttributeName(attributeNumber, reader.GetString(attributeNumber + attributePositionStart));
-                        }
-                        workingRow++;
+                            int rowCount = reader.RowCount;
+                            int workingRow = 0;
 
-                        reader.Read(); reader.Read();
-                        for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
-                        {
-                            documentStorage.SetAttributeIdentifier(attributeNumber, reader.GetString(attributeNumber + attributePositionStart));
-                        }
-                        // - Work with header -
+                            // + Work with header + 
+                            int attributePositionStart = 5;
+                            int fieldCount = reader.FieldCount - attributePositionStart;
+                            documentStorage.Init(fieldCount);
 
-                        int documentCount = 1;
-                        while (reader.Read())
-                        {
-                            workingRow++;
-
-                            string documentIdentifier = null;
-                            ReadColumn(reader, 0, out object textFromReader, out Type textFromReaderType);
-                            if (textFromReader != null && !string.IsNullOrWhiteSpace(textFromReader.ToString()))
-                            {
-                                documentIdentifier = textFromReader.ToString();
-                            }
-                            Document document = documentStorage.CreateDocument(documentIdentifier);
-                            ReadTextFieldFromExcelReader(reader, document, 1, DocumentsStorage.FilesType.Text);
-
-                            ReadTextFieldFromExcelReader(reader, document, 2, DocumentsStorage.FilesType.ScanCopy);
-                            
-                            ReadTextFieldFromExcelReader(reader, document, 3, DocumentsStorage.FilesType.TextPdf);
-                            
-                            ReadTextFieldFromExcelReader(reader, document, 4, DocumentsStorage.FilesType.Attachments);
-
-                            bool shouldToBeAddedInDocumentStorage = false;
-
+                            reader.Read();
                             for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
                             {
-                                object value;
-                                Type valueType;
-                                string attributeId = documentStorage.GetAttributeIdentifier(attributeNumber);
-                                int colPosition = attributeNumber + attributePositionStart;
-                                ReadColumn(reader, colPosition, out value, out valueType);
-                                if (value != null)
+                                documentStorage.SetAttributeName(attributeNumber, reader.GetString(attributeNumber + attributePositionStart));
+                            }
+                            workingRow++;
+
+                            reader.Read(); reader.Read();
+                            for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
+                            {
+                                documentStorage.SetAttributeIdentifier(attributeNumber, reader.GetString(attributeNumber + attributePositionStart));
+                            }
+                            // - Work with header -
+
+                            int documentCount = 1;
+                            while (reader.Read())
+                            {
+                                workingRow++;
+
+                                string documentIdentifier = null;
+                                ReadColumn(reader, 0, out object textFromReader, out Type textFromReaderType);
+                                if (textFromReader != null && !string.IsNullOrWhiteSpace(textFromReader.ToString()))
                                 {
-                                    document.SetAttributeValue(attributeId, new DocumentAttributeValue(value, valueType));
-                                    shouldToBeAddedInDocumentStorage = true;
+                                    documentIdentifier = textFromReader.ToString();
+                                }
+                                Document document = documentStorage.CreateDocument(documentIdentifier);
+                                ReadTextFieldFromExcelReader(reader, document, 1, DocumentsStorage.FilesType.Text);
+                                ReadTextFieldFromExcelReader(reader, document, 2, DocumentsStorage.FilesType.ScanCopy);
+                                ReadTextFieldFromExcelReader(reader, document, 3, DocumentsStorage.FilesType.TextPdf);
+                                ReadTextFieldFromExcelReader(reader, document, 4,
+                                                             DocumentsStorage.FilesType.Attachments);
+
+                                bool shouldToBeAddedInDocumentStorage = false;
+
+                                //throw new Exception("Text exception");
+
+                                for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
+                                {
+                                    object value;
+                                    Type valueType;
+                                    string attributeId = documentStorage.GetAttributeIdentifier(attributeNumber);
+                                    int colPosition = attributeNumber + attributePositionStart;
+                                    ReadColumn(reader, colPosition, out value, out valueType);
+                                    if (value != null)
+                                    {
+                                        document.SetAttributeValue(attributeId,
+                                                                   new DocumentAttributeValue(value, valueType));
+                                        shouldToBeAddedInDocumentStorage = true;
+                                    }
+                                }
+
+                                try
+                                {
+                                    if (shouldToBeAddedInDocumentStorage)
+                                    {
+                                        documentStorage.AddDocument(document);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Exception sendException =
+                                        new Exception($"Произошла ошибка при добавлении документа. Документ '{document.Identifier}' не был добавлен для обработки. Продолжаем обработку.", ex);
+                                    ExceptionOccured?.BeginInvoke(sendException, null, null);
+                                    continue;
                                 }
                             }
-
-                            if (shouldToBeAddedInDocumentStorage)
-                            {
-                                documentStorage.AddDocument(document);
-                            }
-                        }
-                    } while (reader.NextResult());
+                        } while (reader.NextResult());
+                    }
+                    catch (Exception ex)
+                    {
+                        Exception sendException = new Exception("Произошла ошибка при чтении файда шаблона.", ex);
+                        ExceptionOccured?.BeginInvoke(sendException, null, null);
+                    }
                 }
             }
         }

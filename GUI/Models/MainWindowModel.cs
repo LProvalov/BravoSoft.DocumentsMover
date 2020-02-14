@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using ExcelReaderConsole.Models;
-using GUI.Extensions;
 
 namespace GUI.Models
 {
@@ -36,6 +29,17 @@ namespace GUI.Models
                 documents[documentId].State = DocumentItem.DocumentState.Processed;
             }
         }
-       
+
+        public string statusMessage;
+
+        public string StatusMessage
+        {
+            get => statusMessage;
+            set
+            {
+                statusMessage = value;
+                OnPropertyChanged("StatusMessage");
+            }
+        }
     }
 }

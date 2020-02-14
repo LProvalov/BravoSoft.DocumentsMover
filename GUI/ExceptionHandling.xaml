@@ -5,15 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GUI"
         mc:Ignorable="d"
+        x:Name="ExceptionHandligWindow"
         Title="Exception occured" Height="600" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="40"></RowDefinition>
         </Grid.RowDefinitions>
-        <TextBlock x:Name="ExceptionTextBlock" Grid.Row="0">
-
-        </TextBlock>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50*"></ColumnDefinition>
+                <ColumnDefinition Width="50*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <ListView x:Name="listView" Grid.Column="0" ItemsSource="{Binding Exceptions, Mode=OneWay}">
+                <ListView.View>
+                    <GridView x:Name="gridView">
+                        <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Path=Message}"></GridViewColumn>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <EventSetter Event="PreviewMouseLeftButtonDown"
+                                     Handler="ListViewItem_PreviewMouseLeftButtonDown" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+            <TextBlock x:Name="textBlockExceptionDescription" 
+                       Padding="10"
+                       Grid.Column="1" Text="Description..."></TextBlock>
+        </Grid>
+        
         <Button Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
                 Width="60"
                 Click="ButtonBase_OnClick">

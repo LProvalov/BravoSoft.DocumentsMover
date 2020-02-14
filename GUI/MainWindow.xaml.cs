@@ -4,8 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading;
+using System.Runtime.Remoting.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,9 +30,7 @@ namespace GUI
     public partial class MainWindow : Window
     {
         private readonly DocumentManager documentManager;
-
         public readonly MainWindowModel model;
-
         private delegate void NoArgDelegate();
 
         public MainWindow()
@@ -47,6 +44,14 @@ namespace GUI
             documentManager.OverwriteDocumentCards += OverwriteDocumentCards;
             documentManager.DocumentProcessed += DocumentProcessed;
             documentManager.OverwriteFile += OverwriteFile;
+            documentManager.ExceptionOccured += DocumentManagerExceptionOccured;
+        }
+
+        private void DocumentManagerExceptionOccured(Exception ex)
+        {
+            var exceptionHandlingWindow = ExceptionHandling.Instance;
+            exceptionHandlingWindow.Model.AddException(ex);
+            exceptionHandlingWindow.Show();
         }
 
         private bool OverwriteFile(string fullFileName)
@@ -64,6 +69,7 @@ namespace GUI
         private void DocumentProcessed(Document obj)
         {
             model.SetDocumentProcessed(obj.Identifier, true);
+            model.StatusMessage = $"{documentManager.ProcentProcessed:P} completed";
         }
 
         private bool OverwriteDocumentCards()
@@ -99,19 +105,21 @@ namespace GUI
                 factory.SetValue(Ellipse.FillProperty, new Binding("StatusBrush"));
                 factory.SetValue(Ellipse.WidthProperty, 10.0);
                 factory.SetValue(Ellipse.HeightProperty, 10.0);
+
                 gridView.Columns.Add(new GridViewColumn()
                 {
                     Header = "Состояние",
                     CellTemplate = new DataTemplate
                     {
                         VisualTree = factory
-                    },
+                    }
                 });
-                gridView.Columns.Add(new GridViewColumn()
+                var identifierGridView = new GridViewColumn()
                 {
                     Header = "Идентификатор",
                     DisplayMemberBinding = new Binding($"Identifier")
-                });
+                };
+                gridView.Columns.Add(identifierGridView);
                 gridView.Columns.Add(new GridViewColumn()
                 {
                     Header = "Текстовый файл",
@@ -140,6 +148,7 @@ namespace GUI
                         DisplayMemberBinding = new Binding($"[{attribute.Identifier}]")
                     });
                 }
+
             }), DispatcherPriority.Input);
         }
 
@@ -184,12 +193,12 @@ namespace GUI
                 {
                     var newDocumentItem = new DocumentItem(document, attributes);
                     int validateStatus = documentManager.ValidateDocument(document);
-                    if (0 != (validateStatus & (int) DocumentManager.ValidateStatus.Warning))
+                    if (0 != (validateStatus & (int)DocumentManager.ValidateStatus.Warning))
                     {
                         newDocumentItem.Status = DocumentItem.DocumentStatus.WarningOccured;
                     }
 
-                    if (0 != (validateStatus & (int) DocumentManager.ValidateStatus.Error))
+                    if (0 != (validateStatus & (int)DocumentManager.ValidateStatus.Error))
                     {
                         newDocumentItem.Status = DocumentItem.DocumentStatus.ErrorOccured;
                     }
@@ -199,15 +208,28 @@ namespace GUI
                                               (id) => newDocumentItem,
                                               ((s, item) => newDocumentItem));
                 }
+
                 gridView.Dispatcher?.BeginInvoke(new NoArgDelegate(() =>
                 {
                     textBoxListViewLable.Visibility = Visibility.Hidden;
                     model.SetDocuments(documentItems);
                     RunEllipse.Fill = Brushes.GreenYellow;
                     RunMenuItem.IsEnabled = true;
+                    var view = (CollectionView)CollectionViewSource.GetDefaultView(listView.ItemsSource);
+                    view.SortDescriptions.Add(new SortDescription("Identifier", ListSortDirection.Ascending));
+
                 }), DispatcherPriority.Input);
-                
-            });
+            }, TaskContinuationOptions.NotOnFaulted).ContinueWith(task =>
+            {
+                if (task.Exception != null)
+                {
+                    Dispatcher?.BeginInvoke(DispatcherPriority.Input, new NoArgDelegate(() =>
+                    {
+                        ExceptionHandling.Instance.Model.AddException(task.Exception);
+                        ExceptionHandling.Instance.Show();
+                    }));
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
@@ -229,6 +251,7 @@ namespace GUI
             RunEllipse.Fill = Brushes.Yellow;
             RunMenuItem.IsEnabled = false;
 
+            model.StatusMessage = $"{documentManager.ProcentProcessed:P} completed";
             documentManager.ProcessDocumentsAsync().ContinueWith((task =>
             {
                 MessageBox.Show("Document processing is done.", "Processing result",

@@ -113,6 +113,23 @@ namespace ExcelReaderConsole.Models
 
         public Document CreateDocument(string identifier = null)
         {
+            try
+            {
+                if (identifier != null)
+                {
+                    string[] parts = identifier.Split(':');
+                    if (parts.Length == 2)
+                    {
+                        return new DocumentEdition(parts[1], parts[0], attributes);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                
+                throw;
+            }
+
             string documentIdentifier = string.IsNullOrEmpty(identifier)
                 ? string.Format("{0:D5}", documentsDictionary.Count + 1)
                 : identifier;

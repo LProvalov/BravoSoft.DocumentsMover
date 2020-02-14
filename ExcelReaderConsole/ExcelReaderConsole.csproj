@@ -95,6 +95,7 @@
     <Compile Include="Models\DocumentAttribute.cs" />
     <Compile Include="Models\DocumentAttributeValue.cs" />
     <Compile Include="ExcelReader.cs" />
+    <Compile Include="Models\DocumentEdition.cs" />
     <Compile Include="Models\DocumentsStorage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

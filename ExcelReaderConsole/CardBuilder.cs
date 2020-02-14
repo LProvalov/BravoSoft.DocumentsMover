@@ -71,7 +71,17 @@ namespace ExcelReaderConsole
         }
         public void BuildCard(string cardName, Document document)
         {
-            string path = Path.Combine(outputDirectoryPath, $"{cardName}{extension}");
+            string path;
+            if (document is DocumentEdition)
+            {
+                path = Path.Combine(outputDirectoryPath,
+                                    $"{(document as DocumentEdition).MainEditionIdentifier}_editions",
+                                    $"{cardName}{extension}");
+            }
+            else
+            {
+                path = Path.Combine(outputDirectoryPath, $"{cardName}{extension}");
+            }
             FileInfo cardFileInfo = new FileInfo(path);
             if (cardFileInfo.Exists)
             {

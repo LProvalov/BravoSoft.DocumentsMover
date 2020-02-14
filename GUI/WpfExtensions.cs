@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows;
 
 namespace GUI
 {
@@ -28,6 +30,13 @@ namespace GUI
                 get { return _handle; }
             }
             #endregion
+        }
+
+        public static bool IsWindowOpened(this Window window, string name)
+        {
+            return string.IsNullOrEmpty(name)
+                ? Application.Current.Windows.OfType<Window>().Any()
+                : Application.Current.Windows.OfType<Window>().Any(w => w.Name.Equals(name));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +36,7 @@ namespace ExcelReaderConsole
         public Action<Document> DocumentProcessed;
         public EventHandler StatusStringChanged;
         public Action<State, State> StatusChanged;
+        public Action<Exception> ExceptionOccured;
 
         public Func<Document, bool> OverwriteDocumentFiles = null;
         public Func<bool> OverwriteDocumentCards = null;
@@ -65,6 +67,14 @@ namespace ExcelReaderConsole
         private readonly FileManager fileManager;
         private readonly CardBuilder cardBuilder;
         public readonly Logger.LoggerManager loggerManager;
+
+        private float procentProcessed = 0f;
+        private int countOfDocumentProcessed = 0;
+
+        public float ProcentProcessed
+        {
+            get { return procentProcessed; }
+        }
 
         private DocumentManager()
         {
@@ -98,6 +108,10 @@ namespace ExcelReaderConsole
                 {
                     ds.Clean();
                     ExcelReader excelReader = new ExcelReader(excelPath);
+                    excelReader.ExceptionOccured += exception =>
+                        {
+                            ExceptionOccured?.BeginInvoke(exception, null, null);
+                        };
                     excelReader.ReadData(ds);
                 }
                 else
@@ -117,10 +131,7 @@ namespace ExcelReaderConsole
 
         public Task ReadDataFromTemplateAsync()
         {
-            return Task.Factory.StartNew(action: () =>
-            {
-                ReadDataFromTemplate();
-            });
+            return Task.Factory.StartNew(action: () => { ReadDataFromTemplate(); });
         }
         private void ProcessDocuments()
         {
@@ -141,7 +152,11 @@ namespace ExcelReaderConsole
             cardBuilder.SetOutputDirectory(outputDirectory.FullName);
 
             StatusStringChanged(this, new StatusStringChangedArgs("Documents are processing..."));
-            foreach (var document in ds.GetDocuments())
+            procentProcessed = 0f;
+            countOfDocumentProcessed = 0;
+            var documents = ds.GetDocuments();
+            var documentNumber = documents.Count();
+            foreach (var document in documents)
             {
                 string errorMessage;
                 if (!string.IsNullOrEmpty(document.TextFileName))
@@ -202,6 +217,8 @@ namespace ExcelReaderConsole
                     }
                 }
                 loggerManager.Add(new LogMessage(document, $"Обработка документа завершена"));
+                countOfDocumentProcessed++;
+                procentProcessed = countOfDocumentProcessed / (float) documentNumber;
                 DocumentProcessed?.Invoke(document);
             }
             StatusStringChanged(this, new StatusStringChangedArgs($"Documents processing finished."));
@@ -210,10 +227,7 @@ namespace ExcelReaderConsole
 
         public Task ProcessDocumentsAsync()
         {
-            return Task.Factory.StartNew(action: () =>
-            {
-                ProcessDocuments();
-            });
+            return Task.Factory.StartNew(action: () => { ProcessDocuments(); });
         }
 
         public int ValidateDocument(Document document)

@@ -70,6 +70,7 @@
     <Compile Include="Models\AppSettingsViewModel.cs" />
     <Compile Include="Models\DocumentItem.cs" />
     <Compile Include="Models\DocumentWindowModel.cs" />
+    <Compile Include="Models\ExceptionHandlingWindowModel.cs" />
     <Compile Include="Models\LogMessageItem.cs" />
     <Compile Include="Models\MainWindowModel.cs" />
     <Compile Include="WpfExtensions.cs" />
@@ -139,9 +140,8 @@
       <Name>ExcelReaderConsole</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Resource Include="Icons\run.ico" />
+    <Resource Include="Icons\icons.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

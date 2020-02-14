@@ -57,8 +57,10 @@
                     </Style>
                 </ListView.ItemContainerStyle>
             </ListView>
-            <TextBox x:Name="textBoxListViewLable" Grid.Row="0"
+            <TextBox x:Name="textBoxListViewLable" Grid.Row="0" BorderThickness="0"
                      VerticalAlignment="Center" HorizontalAlignment="Center">Select pattern to load</TextBox>
+            <TextBlock Grid.Row="1" Padding="10" Text="{Binding StatusMessage, Mode=OneWay}"
+                       VerticalAlignment="Center" HorizontalAlignment="Left"></TextBlock>
         </Grid>
     </Grid>
 </Window>
