@@ -138,8 +138,6 @@ namespace ExcelReaderConsole
 
                                 bool shouldToBeAddedInDocumentStorage = false;
 
-                                //throw new Exception("Text exception");
-
                                 for (int attributeNumber = 0; attributeNumber < fieldCount; attributeNumber++)
                                 {
                                     object value;

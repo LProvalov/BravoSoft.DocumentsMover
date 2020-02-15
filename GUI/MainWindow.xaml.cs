@@ -50,16 +50,15 @@ namespace GUI
             documentManager.OverwriteDocumentCards += OverwriteDocumentCards;
             documentManager.DocumentProcessed += DocumentProcessed;
             documentManager.OverwriteFile += OverwriteFile;
-            documentManager.ExceptionOccured += DocumentManagerExceptionOccured;
-
-            
+            documentManager.ExceptionOccured += DocumentManagerExceptionOccured;            
         }
 
         private void DocumentManagerExceptionOccured(Exception ex)
         {
-            var exceptionHandlingWindow = ExceptionHandling.Instance;
-            exceptionHandlingWindow.Model.AddException(ex);
-            exceptionHandlingWindow.Show();
+            Dispatcher?.BeginInvoke(DispatcherPriority.Input, new NoArgDelegate(() => {
+                ExceptionHandling.Instance.Model.AddException(ex);
+                ExceptionHandling.Instance.Show();
+            }));
         }
 
         private bool OverwriteFile(string fullFileName)
@@ -191,7 +190,7 @@ namespace GUI
             textBoxListViewLable.Text = "Loading pattern...";
             textBoxListViewLable.Visibility = Visibility.Visible;
 
-            documentManager.ReadDataFromTemplateAsync().ContinueWith((task) =>
+            documentManager.ReadDataFromTemplateAsync((task) =>
             {
                 var attributes = documentManager.DocumentsStorage.GetUsedDocumentAttributes();
                 InitColumnToListView(attributes);
@@ -227,7 +226,9 @@ namespace GUI
                     view.SortDescriptions.Add(new SortDescription("Identifier", ListSortDirection.Ascending));
 
                 }), DispatcherPriority.Input);
-            }, TaskContinuationOptions.NotOnFaulted).ContinueWith(task =>
+            });
+            /*
+              , TaskContinuationOptions.NotOnFaulted).ContinueWith(task =>
             {
                 if (task.Exception != null)
                 {
@@ -238,6 +239,7 @@ namespace GUI
                     }));
                 }
             }, TaskContinuationOptions.OnlyOnFaulted);
+             */
         }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)

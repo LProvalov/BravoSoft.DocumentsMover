@@ -129,10 +129,22 @@ namespace ExcelReaderConsole
             _State = State.TemplateLoaded;
         }
 
-        public Task ReadDataFromTemplateAsync()
+        public void ReadDataFromTemplateAsync(Action<Task> continueWith)
         {
-            return Task.Factory.StartNew(action: () => { ReadDataFromTemplate(); });
+            try
+            {
+                var readDataTask = Task.Factory.StartNew(action: () => { ReadDataFromTemplate(); });
+                readDataTask.ContinueWith(continueWith, TaskContinuationOptions.NotOnFaulted);
+                readDataTask.ContinueWith((task) => {
+                    ExceptionOccured?.BeginInvoke(task.Exception, null, null);
+                }, TaskContinuationOptions.OnlyOnFaulted);
+            }
+            catch(Exception ex)
+            {
+                ExceptionOccured?.BeginInvoke(ex, null, null);
+            }
         }
+
         private void ProcessDocuments()
         {
             if (_State != State.TemplateLoaded)
