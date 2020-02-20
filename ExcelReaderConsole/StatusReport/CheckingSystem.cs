@@ -41,7 +41,7 @@ namespace ExcelReaderConsole.StatusReport
             }
             else
             {
-                string textFilePath = Path.Combine(appSettings.GetInputDirectoryPath(), textFileName);
+                string textFilePath = Path.Combine(appSettings.InputDirectoryPath, textFileName);
                 ds.TextFileExist = CheckFile(textFilePath, out var textStatusMessage);
                 if (!string.IsNullOrEmpty(textStatusMessage)) sb.AppendLine(textStatusMessage);
             }
@@ -54,7 +54,7 @@ namespace ExcelReaderConsole.StatusReport
             }
             else
             {
-                string scanFilePath = Path.Combine(appSettings.GetInputDirectoryPath(), scanFileName);
+                string scanFilePath = Path.Combine(appSettings.InputDirectoryPath, scanFileName);
                 ds.ScanFileExist = CheckFile(scanFilePath, out var scanStatusMessage);
                 if (!string.IsNullOrEmpty(scanStatusMessage)) sb.AppendLine(scanStatusMessage);
             }

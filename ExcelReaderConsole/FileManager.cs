@@ -32,7 +32,7 @@ namespace ExcelReaderConsole
         private readonly AppSettings appSettings = AppSettings.Instance;
         private DirectoryInfo CreateDir(string dirName)
         {
-            string dirPath = Path.Combine(AppSettings.Instance.GetOutputDirectoryPath(), dirName);
+            string dirPath = Path.Combine(AppSettings.Instance.OutputDirectoryPath, dirName);
             DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
             if (!dirInfo.Exists)
             {
@@ -81,7 +81,7 @@ namespace ExcelReaderConsole
             {
                 throw new Exception($"{document.Identifier} haven't scan file");
             }
-            string scanFilePath = Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), document.ScanFileName);
+            string scanFilePath = Path.Combine(AppSettings.Instance.InputDirectoryPath, document.ScanFileName);
             return new FileInfo(scanFilePath);
         }
 
@@ -91,14 +91,14 @@ namespace ExcelReaderConsole
             {
                 throw new Exception($"{document.Identifier} haven't text file");
             }
-            string textFilePath = Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), document.TextFileName);
+            string textFilePath = Path.Combine(AppSettings.Instance.InputDirectoryPath, document.TextFileName);
             return new FileInfo(textFilePath);
         }
 
         public string MakeNewTextFilePath(Document document)
         {
             return document.TextFileInfo != null ? 
-                Path.Combine(appSettings.GetOutputDirectoryPath(),
+                Path.Combine(appSettings.OutputDirectoryPath,
                 GetTextDirName(document),
                 $"{document.Identifier}_7845{document.TextFileInfo.Extension}") :
                 string.Empty;
@@ -107,7 +107,7 @@ namespace ExcelReaderConsole
         public string MakeNewMhtTextFilePath(Document document)
         {
             return document.TextFileInfo != null
-                ? Path.Combine(appSettings.GetOutputDirectoryPath(),
+                ? Path.Combine(appSettings.OutputDirectoryPath,
                     GetTextDirName(document),
                     $"{document.Identifier}_7778.mht")
                 : string.Empty;
@@ -115,14 +115,14 @@ namespace ExcelReaderConsole
         public string MakeNewScanFilePath(Document document)
         {
             return document.ScanFileInfo != null ? 
-                Path.Combine(appSettings.GetOutputDirectoryPath(), 
+                Path.Combine(appSettings.OutputDirectoryPath,
                 GetAttachDirName(document), document.ScanFileInfo.Name) : 
                 string.Empty;
         }
         public string MakeNewTextPdfPath(Document document)
         {
             return document.TextPdfFileInfo != null ?
-                Path.Combine(appSettings.GetOutputDirectoryPath(),
+                Path.Combine(appSettings.OutputDirectoryPath,
                 GetTextDirName(document),
                 $"{document.Identifier}{document.TextPdfFileInfo.Extension}") :
                 string.Empty;
@@ -135,12 +135,12 @@ namespace ExcelReaderConsole
             {
                 foreach (var fileName in document.AttachmentsFilesNames.Split(';'))
                 {
-                    string attachmentFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), fileName.Trim());
+                    string attachmentFileFullPath = Path.Combine(appSettings.InputDirectoryPath, fileName.Trim());
                     FileInfo attachmentFileInfo = new FileInfo(attachmentFileFullPath);
                     if (attachmentFileInfo.Exists)
                     {
                         attachmentCount++;
-                        string newAttachmentFileName = Path.Combine(appSettings.GetOutputDirectoryPath(),
+                        string newAttachmentFileName = Path.Combine(appSettings.OutputDirectoryPath,
                             GetAttachDirName(document),
                             $"Вложение{attachmentCount}{attachmentFileInfo.Extension}");
                         if (File.Exists(newAttachmentFileName))
@@ -212,7 +212,7 @@ namespace ExcelReaderConsole
             DirectoryInfo documentAdditionalDirectory = CreateDirectoriesForAdditionalFiles(document);
             if (!string.IsNullOrEmpty(document.ScanFileName))
             {
-                string scanFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), document.ScanFileName);
+                string scanFileFullPath = Path.Combine(appSettings.InputDirectoryPath, document.ScanFileName);
                 document.ScanFileInfo = new FileInfo(scanFileFullPath);
                 if (document.ScanFileInfo.Exists)
                 {
@@ -258,7 +258,7 @@ namespace ExcelReaderConsole
             DirectoryInfo documentTextDirectory = CreateDirectoriesForTextFiles(document);
             if (!string.IsNullOrEmpty(document.TextPdfFileName))
             {
-                string textPdfFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), document.TextPdfFileName);
+                string textPdfFileFullPath = Path.Combine(appSettings.InputDirectoryPath, document.TextPdfFileName);
                 document.TextPdfFileInfo = new FileInfo(textPdfFileFullPath);
                 if (document.TextPdfFileInfo.Exists)
                 {
@@ -303,7 +303,7 @@ namespace ExcelReaderConsole
             List<FileInfo> attachmentFilesInfos = new List<FileInfo>(attachmentsFilesNames.Length);
             foreach (string fileName in attachmentsFilesNames)
             {
-                string attachmentFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), fileName.Trim());
+                string attachmentFileFullPath = Path.Combine(appSettings.InputDirectoryPath, fileName.Trim());
                 yield return new FileInfo(attachmentFileFullPath);
             }
         }
@@ -321,13 +321,13 @@ namespace ExcelReaderConsole
                 int attachmentCount = 0;
                 foreach (var fileName in attachmentsFilesNames)
                 { 
-                    string attachmentFileFullPath = Path.Combine(appSettings.GetInputDirectoryPath(), fileName.Trim());
+                    string attachmentFileFullPath = Path.Combine(appSettings.InputDirectoryPath, fileName.Trim());
                     FileInfo attachmentFileInfo = new FileInfo(attachmentFileFullPath);
                     if (attachmentFileInfo.Exists)
                     {
                         attachmentCount++;
                         attachmentFilesInfos.Add(attachmentFileInfo);
-                        string newAttachmentFileName = Path.Combine(appSettings.GetOutputDirectoryPath(),
+                        string newAttachmentFileName = Path.Combine(appSettings.OutputDirectoryPath,
                                 GetAttachDirName(document),
                                 $"Вложение{attachmentCount}{attachmentFileInfo.Extension}");
                         FileInfo newAttachmentFileInfo = new FileInfo(newAttachmentFileName);

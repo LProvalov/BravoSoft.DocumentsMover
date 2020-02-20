@@ -22,15 +22,16 @@ namespace GUI
     public partial class AppSettings : Window
     {
         private ExcelReaderConsole.AppSettings appSettings = ExcelReaderConsole.AppSettings.Instance;
+        private AppSettingsViewModel model;
         public AppSettings()
         {   
             InitializeComponent();
-            DataContext = new AppSettingsViewModel()
+            model = new AppSettingsViewModel()
             {
                 InputDirectory = appSettings.InputDirectoryPath,
-                OutputDirectory = appSettings.OutputDirectoryPath,
-                ExcelTemplatePath = appSettings.ExcelTemplateFilePath
+                OutputDirectory = appSettings.OutputDirectoryPath
             };
+            DataContext = model;
         }
 
         private DirectoryInfo CreateIfNotExists(string path)
@@ -51,6 +52,7 @@ namespace GUI
             if (result == System.Windows.Forms.DialogResult.OK)
             {
                 this.inputDirectoryTextBox.Text = folderDialog.SelectedPath;
+                model.InputDirectory = folderDialog.SelectedPath;
             }
         }
 
@@ -62,33 +64,59 @@ namespace GUI
             if (result == System.Windows.Forms.DialogResult.OK)
             {
                 this.outputDirectoryTextBox.Text = folderDialog.SelectedPath;
+                model.OutputDirectory = folderDialog.SelectedPath;
             }
         }
 
-        private void excelTemplateBrowsButton_Click(object sender, RoutedEventArgs args)
+
+        private bool CheckDirectory(string directoryPath, out string fullPath)
         {
-            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
-            openFileDialog.Multiselect = false;
-            openFileDialog.Filter = "Excel template file (*.excel)|*.xlsx";
-            openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            bool? dialogResult = openFileDialog.ShowDialog();
-            if (dialogResult.HasValue && dialogResult.Value == true)
+            fullPath = string.Empty;
+            DirectoryInfo directoryInfo = new DirectoryInfo(directoryPath);
+            if (string.IsNullOrEmpty(directoryPath))
             {
-                this.excelTemplateTextBox.Text = openFileDialog.FileName;
+                return false;
             }
+            if (!directoryInfo.Exists)
+            {
+                var result = MessageBox.Show($"Директория ({directoryPath}) не существует, создать?",
+                                             "Внимание!", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.Yes)
+                {
+                    DirectoryInfo createdDirInfo = CreateIfNotExists(directoryInfo.FullName);
+                    if (createdDirInfo != null)
+                    {
+                        fullPath = createdDirInfo.FullName;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            fullPath = directoryInfo.FullName;
+            return true;
         }
-
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
+            bool isOk = true;
             try
             {
-                if (!string.IsNullOrEmpty(outputDirectoryTextBox.Text))
+                string fullPath;
+                if (isOk &= CheckDirectory(outputDirectoryTextBox.Text, out fullPath))
                 {
-                    appSettings.OutputDirectoryPath = CreateIfNotExists(outputDirectoryTextBox.Text)?.FullName ?? string.Empty;
+                    appSettings.OutputDirectoryPath = fullPath;
+                    model.OutputDirectory = appSettings.OutputDirectoryPath;
                 }
-                if (!string.IsNullOrEmpty(inputDirectoryTextBox.Text))
+
+                if (isOk &= CheckDirectory(inputDirectoryTextBox.Text, out fullPath))
                 {
-                    appSettings.InputDirectoryPath = CreateIfNotExists(inputDirectoryTextBox.Text)?.FullName ?? string.Empty;
+                    appSettings.InputDirectoryPath = fullPath;
+                    model.InputDirectory = appSettings.InputDirectoryPath;
                 }
             }
             catch (IOException ioEx)
@@ -97,9 +125,12 @@ namespace GUI
                 return;
             }
 
-            appSettings.SaveAppSettings();
-            DialogResult = true;
-            Close();
+            if (isOk)
+            {
+                appSettings.SaveAppSettings();
+                DialogResult = true;
+                Close();
+            }
         }
 
         private void cancelButton_Click(object sender, RoutedEventArgs e)

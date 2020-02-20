@@ -89,12 +89,6 @@ namespace ExcelReaderConsole
             return model.CardFileExtension;
         }
 
-        public string GetExcelTemplateFilePath()
-        {
-            CheckAppSettingsLoaded();
-            return model.ExcelTemplateFilePath;
-        }
-
         public string ExcelTemplateFilePath
         {
             get
@@ -104,14 +98,7 @@ namespace ExcelReaderConsole
             }
             set
             {
-                if (File.Exists(value))
-                {
-                    model.ExcelTemplateFilePath = value;
-                }
-                else
-                {
-                    model.ExcelTemplateFilePath = string.Empty;
-                }
+                model.ExcelTemplateFilePath = value;
             }
         }
 
@@ -119,8 +106,7 @@ namespace ExcelReaderConsole
         {
             if (!string.IsNullOrEmpty(path))
             {
-                var dir = Utility.CheckDirectoryAndCreate(path);
-                return dir.FullName;
+                return path;
             }
             else
             {
@@ -130,53 +116,29 @@ namespace ExcelReaderConsole
             }
         }
 
-        public string GetInputDirectoryPath()
-        {
-            CheckAppSettingsLoaded();
-            return GetDirectoryPath(model.InputDirectoryPath, "Input");
-        }
         public string InputDirectoryPath
         {
             get
             {
                 CheckAppSettingsLoaded();
-                return GetDirectoryPath(model.InputDirectoryPath, "Input");
+                return model.InputDirectoryPath;
             }
             set
             {
-                if (Directory.Exists(value))
-                {
-                    model.InputDirectoryPath = value;
-                }
-                else
-                {
-                    model.InputDirectoryPath = string.Empty;
-                }
+                model.InputDirectoryPath = value;
             }
         }
 
-        public string GetOutputDirectoryPath()
-        {
-            CheckAppSettingsLoaded();
-            return GetDirectoryPath(model.OutputDirectoryPath, "Output");
-        }
         public string OutputDirectoryPath
         {
             get
             {
                 CheckAppSettingsLoaded();
-                return GetDirectoryPath(model.OutputDirectoryPath, "Output");
+                return model.OutputDirectoryPath;
             }
             set
             {
-                if (Directory.Exists(value))
-                {
-                    model.OutputDirectoryPath = value;
-                }
-                else
-                {
-                    model.OutputDirectoryPath = string.Empty;
-                }
+                model.OutputDirectoryPath = value;
             }
         }
 

@@ -43,6 +43,7 @@ namespace GUI
 
             model = new MainWindowModel();
             model.SetImageRunSource(runIconsList["stop"]);
+            model.statusMessage = "Ready to work";
             DataContext = model;
             documentManager = DocumentManager.Instance;
             documentManager.StatusChanged += DocumentManagerStatusChangedHandler;
@@ -50,7 +51,7 @@ namespace GUI
             documentManager.OverwriteDocumentCards += OverwriteDocumentCards;
             documentManager.DocumentProcessed += DocumentProcessed;
             documentManager.OverwriteFile += OverwriteFile;
-            documentManager.ExceptionOccured += DocumentManagerExceptionOccured;            
+            documentManager.ExceptionOccured += DocumentManagerExceptionOccured;
         }
 
         private void DocumentManagerExceptionOccured(Exception ex)
@@ -227,19 +228,6 @@ namespace GUI
 
                 }), DispatcherPriority.Input);
             });
-            /*
-              , TaskContinuationOptions.NotOnFaulted).ContinueWith(task =>
-            {
-                if (task.Exception != null)
-                {
-                    Dispatcher?.BeginInvoke(DispatcherPriority.Input, new NoArgDelegate(() =>
-                    {
-                        ExceptionHandling.Instance.Model.AddException(task.Exception);
-                        ExceptionHandling.Instance.Show();
-                    }));
-                }
-            }, TaskContinuationOptions.OnlyOnFaulted);
-             */
         }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
@@ -297,6 +285,11 @@ namespace GUI
         private void listView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             int index = listView.SelectedIndex;
+            if (index < 0 || index >= listView.Items.Count)
+            {
+                return;
+            }
+
             if (listView.Items[index] is DocumentItem selectedItem)
             {
                 Document document = documentManager.DocumentsStorage.GetDocument(selectedItem.Identifier);

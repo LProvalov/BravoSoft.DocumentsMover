@@ -101,7 +101,7 @@ namespace ExcelReaderConsole.Models
                 if (_textFileInfo == null)
                 {
                     string textFileFullPath =
-                        Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), this.TextFileName);
+                        Path.Combine(AppSettings.Instance.InputDirectoryPath, this.TextFileName);
                     _textFileInfo = new FileInfo(textFileFullPath);
                 }
                 return _textFileInfo;
@@ -120,7 +120,7 @@ namespace ExcelReaderConsole.Models
                 if (_scanFileInfo == null)
                 {
                     string scanFileFullPath =
-                        Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), this.ScanFileName);
+                        Path.Combine(AppSettings.Instance.InputDirectoryPath, this.ScanFileName);
                     _scanFileInfo = new FileInfo(scanFileFullPath);
                 }
                 return _scanFileInfo;
@@ -142,7 +142,7 @@ namespace ExcelReaderConsole.Models
                 if (_textPdfFileInfo == null)
                 {
                     string textPdfFileFullPath =
-                        Path.Combine(AppSettings.Instance.GetInputDirectoryPath(), this.TextPdfFileName);
+                        Path.Combine(AppSettings.Instance.InputDirectoryPath, this.TextPdfFileName);
                     _textPdfFileInfo = new FileInfo(textPdfFileFullPath);
                 }
                 return _textPdfFileInfo;

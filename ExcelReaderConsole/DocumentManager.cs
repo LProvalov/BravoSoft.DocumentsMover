@@ -97,11 +97,10 @@ namespace ExcelReaderConsole
             {
                 if (!appSettings.Validate(out string errorMsg))
                 {
-
                     _State = State.ErrorOccured;
                     return;
                 }
-                string excelPath = appSettings.GetExcelTemplateFilePath();
+                string excelPath = appSettings.ExcelTemplateFilePath;
                 FileInfo excelFile = new FileInfo(excelPath);
                 StatusStringChanged(this, new StatusStringChangedArgs($"Template is loading: {excelPath}"));
                 if (excelFile.Exists && excelFile.Extension.Equals(".xlsx"))
@@ -156,7 +155,7 @@ namespace ExcelReaderConsole
             _State = State.DocumentProcessing;
 
             StatusStringChanged(this, new StatusStringChangedArgs("Checking of output directories"));
-            DirectoryInfo outputDirectory = new DirectoryInfo(appSettings.GetOutputDirectoryPath());
+            DirectoryInfo outputDirectory = new DirectoryInfo(appSettings.OutputDirectoryPath);
             if (!outputDirectory.Exists)
             {
                 outputDirectory.Create();

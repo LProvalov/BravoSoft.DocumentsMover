@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -17,10 +18,17 @@ namespace GUI.Models
             {
                 this.inputDirectory = value;
                 OnPropertyChanged("InputDirectory");
+                OnPropertyChanged("IsExistsInputDirectory");
             }
         }
 
         private String outputDirectory;
+
+        public bool IsExistsInputDirectory { get { return Directory.Exists(inputDirectory); } }
+        public bool IsExistsOutputDirectory
+        {
+            get { return Directory.Exists(outputDirectory); }
+        }
 
         public String OutputDirectory
         {
@@ -29,21 +37,9 @@ namespace GUI.Models
             {
                 this.outputDirectory = value;
                 OnPropertyChanged("OutputDirectory");
+                OnPropertyChanged("IsExistsOutputDirectory");
             }
         }
-
-        private String excelTemplatePath;
-
-        public String ExcelTemplatePath
-        {
-            get { return this.excelTemplatePath; }
-            set
-            {
-                this.excelTemplatePath = value;
-                OnPropertyChanged("ExcelTemplatePath");
-            }
-        }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
 
