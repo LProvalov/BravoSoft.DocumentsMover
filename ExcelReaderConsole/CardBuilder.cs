@@ -64,7 +64,26 @@ namespace ExcelReaderConsole
             {
                 foreach (var attribute in document.GetNotNullAttributes())
                 {
-                    sw.WriteLine($"{attribute.Key} {attribute.Value.Value}");
+                    if (attribute.Value.ValueType == typeof(string))
+                    {
+                        string attrValue = attribute.Value.Value as string;
+                        string[] attrValues = attrValue?.Split(';') ?? null;
+                        if (attrValues != null && attrValues.Length > 0)
+                        {
+                            foreach (var value in attrValues)
+                            {
+                                string trimmedValue = value.Trim();
+                                if (!string.IsNullOrEmpty(trimmedValue))
+                                {
+                                    sw.WriteLine($"{attribute.Key} {trimmedValue}");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        sw.WriteLine($"{attribute.Key} {attribute.Value.Value}");
+                    }
                 }
                 sw.Close();
             }

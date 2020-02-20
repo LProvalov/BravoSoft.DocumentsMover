@@ -33,6 +33,7 @@ namespace GUI
         public readonly MainWindowModel model;
         private delegate void NoArgDelegate();
         private Dictionary<string, ImageSource> runIconsList = new Dictionary<string, ImageSource>();
+        private bool templateWasLoaded = false;
 
         public MainWindow()
         {
@@ -174,18 +175,9 @@ namespace GUI
             return null;
         }
 
-        private void MenuItemLoadTemplate_OnClick(object sender, RoutedEventArgs e)
+        private void LoadTemplate()
         {
-            string templateFile = selectExcelTemplateFile();
-            if (!string.IsNullOrEmpty(templateFile))
-            {
-                ExcelReaderConsole.AppSettings.Instance.ExcelTemplateFilePath = templateFile;
-            }
-            else
-            {
-                return;
-            }
-
+            templateWasLoaded = false;
             model.SetImageRunSource(runIconsList["stop"]);
             RunMenuItem.IsEnabled = false;
             textBoxListViewLable.Text = "Loading pattern...";
@@ -227,7 +219,22 @@ namespace GUI
                     view.SortDescriptions.Add(new SortDescription("Identifier", ListSortDirection.Ascending));
 
                 }), DispatcherPriority.Input);
+                templateWasLoaded = true;
             });
+        }
+
+        private void MenuItemLoadTemplate_OnClick(object sender, RoutedEventArgs e)
+        {
+            string templateFile = selectExcelTemplateFile();
+            if (!string.IsNullOrEmpty(templateFile))
+            {
+                ExcelReaderConsole.AppSettings.Instance.ExcelTemplateFilePath = templateFile;
+            }
+            else
+            {
+                return;
+            }
+            LoadTemplate();
         }
 
         private void MenuItemSettings_OnClick(object sender, RoutedEventArgs e)
@@ -236,6 +243,11 @@ namespace GUI
             appSettings.Left = this.Left + this.Width / 2 - appSettings.Width / 2;
             appSettings.Top = this.Top + this.Height / 2 - appSettings.Height / 2;
             bool? dialogResult = appSettings.ShowDialog();
+            if (dialogResult.HasValue && dialogResult.Value && templateWasLoaded)
+            {
+                // In this case we should reload template
+                LoadTemplate();
+            }
         }
 
         private void MenuItemExit_OnClick(object sender, RoutedEventArgs e)
@@ -249,7 +261,7 @@ namespace GUI
             model.SetImageRunSource(runIconsList["stop_yellow"]);
             RunMenuItem.IsEnabled = false;
 
-            model.StatusMessage = $"{documentManager.ProcentProcessed:P} completed";
+            model.StatusMessage = $"{0:P} completed";
             documentManager.ProcessDocumentsAsync().ContinueWith((task =>
             {
                 MessageBox.Show("Document processing is done.", "Processing result",
